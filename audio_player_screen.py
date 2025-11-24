@@ -96,23 +96,26 @@ class AudioPlayerScreen(Screen):
         controls.add_widget(BoxLayout(size_hint=(0.3, 1)))
         
         prev_btn = Button(
-            text='⏮',
+            text='|<',
             font_size='35sp',
             size_hint=(0.13, 1),
             background_color=(0, 0, 0, 0),
             color=(1, 1, 1, 0.9)
         )
         
-        play_btn = Button(
-            text='▶',
-            font_size='35sp',
-            size_hint=(0.13, 1),
-            background_color=(0, 0, 0, 0),
-            color=(1, 1, 1, 0.9)
-        )
+        play_btn = PlayPauseButton(size_hint=(None, None), size=(40, 40))
         
+        prev_btn = Button(
+            text='|<',
+            font_size='35sp',
+            size_hint=(None, 1),
+            width=50,
+            background_color=(0, 0, 0, 0),
+            color=(1, 1, 1, 1)
+        )
+
         next_btn = Button(
-            text='⏭',
+            text='>|',
             font_size='35sp',
             size_hint=(0.13, 1),
             background_color=(0, 0, 0, 0),

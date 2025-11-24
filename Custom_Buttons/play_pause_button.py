@@ -60,7 +60,7 @@ class PlayPauseButton(ButtonBehavior, Widget):
     def on_press(self):
         # toggle state and animate crossfade + small transform for polish
         self.is_playing = not self.is_playing
-        print(f"PlayPauseButton pressed -> is_playing={self.is_playing}")
+        #print(f"PlayPauseButton pressed -> is_playing={self.is_playing}")
         if self.is_playing:
             # triangle → fade out, bars fade in
             anim = Animation(_tri_a=0, _bar_a=1, d=0.18, t='out_quad')

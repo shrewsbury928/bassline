@@ -101,7 +101,7 @@ class HomeScreen(Screen):
         ))
         
         skip_back = Button(
-            text='⏮',
+            text='|<',
             font_size='24sp',
             size_hint=(None, 1),
             width=50,
@@ -110,7 +110,7 @@ class HomeScreen(Screen):
         )
         
         skip_forward = Button(
-            text='⏭',
+            text='>|',
             font_size='24sp',
             size_hint=(None, 1),
             width=50,
