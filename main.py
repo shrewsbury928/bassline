@@ -21,6 +21,7 @@ class BasslineApp(App):
         
         sm = ScreenManager()
         sm.add_widget(LoginScreen(name='login'))
+        
         sm.add_widget(HomeScreen(name='home'))
         sm.add_widget(AudioPlayerScreen(name='audio_player'))
         

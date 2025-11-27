@@ -3,6 +3,7 @@ from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.label import Label
 from kivy.graphics import Color, Rectangle, RoundedRectangle
 from Custom_Buttons.play_pause_button import PlayPauseButton
+from song import Song
 
 
 class SongCard(BoxLayout):
@@ -51,7 +52,7 @@ class SongCard(BoxLayout):
         
         play_btn = PlayPauseButton(size_hint=(None, None), size=(30, 30))
         
-        # Arrange based on album position
+        # Arrange based on album cover position
         if album_on_right:
             self.add_widget(info_layout)
             self.add_widget(play_btn)
@@ -70,3 +71,6 @@ class SongCard(BoxLayout):
     def _update_album(self, instance, value):
         self.album_rect.pos = instance.pos
         self.album_rect.size = instance.size
+
+    def get_song(self):
+        pass

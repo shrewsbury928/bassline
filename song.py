@@ -1,47 +1,19 @@
-#import TinyTags
+from tinytag import TinyTag as tag
 import pygame.mixer as mixer
+import pickle
 mixer.init()
 
 class Song():
-    def __init__(self, mp3_path, img_path, genre: str):
-        self.audio = mixer.Sound(mp3_path)
-
-        if img_path == None:
-            img_path = r"one.png"
-        self.cover = open(img_path, 'r')
-        #tags = TinyTags.get(mp3_path)
-        self.token = genre
+    def __init__(self, mp3_path, genre: str = 'n/a'):
+        self.path = mp3_path
+        tags: tag = tag.get(self.path, image=True)
+        images = tags.images
+        self.cover = images.front_cover
+        if self.cover == None:
+            self.cover = r"one.png"
+        tags = tag.get(mp3_path)
+        self.token = tags.genre
         self.paused = True
 
-    def play(self):
-        self.audio.play()
-        self.paused = False
-
-    def un_pause(self):
-        if self.paused == False:
-            mixer.pause()
-            self.paused = True
-        else:
-            mixer.unpause()
-            self.paused = False
-            
-##
-##song = Song("test_song.mp3",'one.png',"pop" )
-##
-##test = '5'
-##while test != '0':
-##    test = input("2 = pause/resume, 0 = stop, 1 = play: ")
-##
-##    match test:
-##        case '1':
-##            song.play()
-##            print("playing")
-##        case '2':
-##            song.un_pause()
-##        case '0':
-##            mixer.stop()
-##            break
-##        case _:
-##            pass
-##    test = '5'
-
+    def store(self):
+        pass

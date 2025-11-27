@@ -3,12 +3,14 @@ from song import Song
 import random as r
 
 class Playlist():
-    def __init__(self, title):
+    def __init__(self, title, desc = ''):
         self.title = title
-        self.description = ""
+        self.description = desc
         self.cover = "one.png"
         self.songs = []
+        self.queue = []
         self.run_length = "0m 0s"
+        self.curr_index = 0
         self.stopped = True
 
     def add_song(self, song):
@@ -16,32 +18,9 @@ class Playlist():
 
     #shuffle button
     def shuffle(self):
-        r.shuffle(self.songs)
-
-    #play button
-    def listen(self):
-        curr_index = 0
-
-        self.songs[curr_index].audio.play()
-        self.stopped = False
-        
-        #queue tracker
-        while not self.stopped:            
-            current = self.songs[curr_index].audio
-            if curr_index+1 < len(self.songs):
-                nxt = self.songs[curr_index+1].audio
-            else:
-                nxt = self.songs[0].audio
-
-            if not mixer.music.get_busy() or self.stopped:
-                mixer.play(nxt)
-
-            curr_index += 1   
-            
-             
-    def stop(self):
-        mixer.stop()
-        self.stopped = True
+        self.queue = self.songs
+        shuffle = r.shuffle(self.queue)
+        self.queue = shuffle
 
     #description set - save button
     def set_description(self, desc):
@@ -55,17 +34,30 @@ class Playlist():
         self.run_length = f"{total//60}m {total%60}s"
 
     #saves updates
-    def save(self, desc):
+    def save(self, desc = ''):
         self.get_length()
         self.set_description(desc)
+        self.queue = self.songs
+
+    def view(self):
+        print(self.title, self.description, self.run_length)
+        for song in self.songs:
+            print(song.token)
+    
+    def listen(self):
+        pass
+
+# P = Playlist("test")
+# a = Song(r'C:/Users/s-khatri19/OneDrive - st-bernards.slough.sch.uk/A level comp-sci/CO3 - NEA/Bassline/bassline/library/test_song.mp3', None, "lofi")
+# b = Song(r'C:/Users/s-khatri19/OneDrive - st-bernards.slough.sch.uk/A level comp-sci/CO3 - NEA/Bassline/bassline/library/test_song.mp3', None, "pop")
+# c = Song(r'C:/Users/s-khatri19/OneDrive - st-bernards.slough.sch.uk/A level comp-sci/CO3 - NEA/Bassline/bassline/library/test_song.mp3', None, "rock")
 
 
-P = Playlist("test")
-s = Song(r"C:/Users/s-khatri19/OneDrive - st-bernards.slough.sch.uk/A level comp-sci/CO3 - NEA/Bassline/bassline/songs/test_song.mp3", None, "lofi")
-
-P.add_song(s)
-P.save('1')
-#P.listen()
-print(P.run_length)
+# P.add_song(a)
+# P.add_song(b)
+# P.add_song(c)
+# P.save('1')
+# #P.listen()
+# P.view()
 
     
