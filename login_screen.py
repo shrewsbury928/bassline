@@ -13,7 +13,7 @@ from kivy.core.window import Window
 from Custom_Buttons.play_pause_button import PlayPauseButton
 
 # Import your backend functions
-import login
+from backend import login
 
 class LoginScreen(Screen):
     def __init__(self, **kwargs):

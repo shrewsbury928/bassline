@@ -7,6 +7,7 @@ from kivy.uix.image import Image
 from kivy.graphics import Color, Rectangle, Line, RoundedRectangle
 from kivy.core.window import Window
 from kivy.clock import Clock
+from kivy.animation import Animation
 from Custom_Buttons.play_pause_button import PlayPauseButton
 import pygame.mixer as mixer
 import io
@@ -384,22 +385,32 @@ class AudioController(FloatLayout):
                 print(f"Seeking not supported: {e}")
     
     def show_mini(self):
-        """Show the mini player"""
+        """Show the mini player with smooth animation"""
         self.is_expanded = False
         self.size = Window.size
-        self.mini_container.opacity = 1
-        self.mini_player.opacity = 1
-        self.expand_btn.opacity = 1
-        self.full_player.opacity = 0
+        
+        # Animate the transition
+        anim_full = Animation(opacity=0, duration=0.3, t='out_quad')
+        anim_mini = Animation(opacity=1, duration=0.3, t='out_quad')
+        
+        anim_full.start(self.full_player)
+        anim_mini.start(self.mini_container)
+        anim_mini.start(self.mini_player)
+        anim_mini.start(self.expand_btn)
     
     def expand(self):
-        """Expand to full player"""
+        """Expand to full player with smooth animation"""
         self.is_expanded = True
         self.size = Window.size
-        self.mini_container.opacity = 0
-        self.mini_player.opacity = 0
-        self.expand_btn.opacity = 0
-        self.full_player.opacity = 1
+        
+        # Animate the transition
+        anim_mini = Animation(opacity=0, duration=0.3, t='out_quad')
+        anim_full = Animation(opacity=1, duration=0.3, t='out_quad')
+        
+        anim_mini.start(self.mini_container)
+        anim_mini.start(self.mini_player)
+        anim_mini.start(self.expand_btn)
+        anim_full.start(self.full_player)
     
     def hide(self):
         """Completely hide the player"""

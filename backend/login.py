@@ -10,7 +10,7 @@ DB_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'basslin
 db = sql.connect(DB_PATH)
 c = db.cursor() #cursor
 
-#c.execute('DROP TABLE IF EXISTS profiles')
+c.execute('DROP TABLE IF EXISTS profiles')
 
 c.execute('''
 CREATE TABLE IF NOT EXISTS profiles (
