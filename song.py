@@ -1,7 +1,5 @@
 from tinytag import TinyTag as tag
-import pygame.mixer as mixer
 import pickle
-mixer.init()
 
 class Song():
     def __init__(self, mp3_path, genre: str = 'n/a'):

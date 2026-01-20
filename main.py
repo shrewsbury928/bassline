@@ -9,7 +9,6 @@ sys.path.append(os.path.join(os.path.dirname(__file__), 'backend'))
 
 #screens
 from home_screen import HomeScreen
-from audio_player_screen import AudioPlayerScreen
 from login_screen import LoginScreen
 
 
@@ -21,9 +20,8 @@ class BasslineApp(App):
         
         sm = ScreenManager()
         sm.add_widget(LoginScreen(name='login'))
-        
         sm.add_widget(HomeScreen(name='home'))
-        sm.add_widget(AudioPlayerScreen(name='audio_player'))
+        
         
         return sm
 

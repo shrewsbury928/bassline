@@ -6,18 +6,16 @@ from kivy.uix.slider import Slider
 from kivy.graphics import Color, Rectangle, Line, RoundedRectangle
 from kivy.core.window import Window
 from Custom_Buttons.play_pause_button import PlayPauseButton
-from kivy.uix.behaviors.button import ButtonBehaviour
+import pygame.mixer as mixer
 
-class AudioPlayerScreen(BoxLayout, ButtonBehaviour):
+class AudioPlayer(BoxLayout):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
         self.is_mini = False
         
-        layout = BoxLayout()
-        
         # Set background color to light blue
-        with layout.canvas.before:
+        with self.canvas.before:
             Color(0.65, 0.72, 0.82, 1)
             self.rect = Rectangle(size=Window.size, pos=(0, 0))
         
@@ -120,6 +118,8 @@ class AudioPlayerScreen(BoxLayout, ButtonBehaviour):
             layout.add_widget(song_info)
             layout.add_widget(controls)
             layout.bind(on_press=self.switch_layout)
+        
+        self.add_widget(layout)
     
     def _update_top_rect(self, instance, value):
         self.top_rect.pos = instance.pos
@@ -135,5 +135,20 @@ class AudioPlayerScreen(BoxLayout, ButtonBehaviour):
     
     def switch_layout(self):
         self.is_mini = not self.is_mini
+
+    def play(self):
+        pass
+
+    def pause_resume(self):
+        pass
+
+    def skip(self):
+        pass
+
+    def rewind(self):
+        pass
+
+    def stop(self):
+        pass
 
         

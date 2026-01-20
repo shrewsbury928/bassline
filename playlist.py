@@ -44,20 +44,4 @@ class Playlist():
         for song in self.songs:
             print(song.token)
     
-    def listen(self):
-        pass
-
-# P = Playlist("test")
-# a = Song(r'C:/Users/s-khatri19/OneDrive - st-bernards.slough.sch.uk/A level comp-sci/CO3 - NEA/Bassline/bassline/library/test_song.mp3', None, "lofi")
-# b = Song(r'C:/Users/s-khatri19/OneDrive - st-bernards.slough.sch.uk/A level comp-sci/CO3 - NEA/Bassline/bassline/library/test_song.mp3', None, "pop")
-# c = Song(r'C:/Users/s-khatri19/OneDrive - st-bernards.slough.sch.uk/A level comp-sci/CO3 - NEA/Bassline/bassline/library/test_song.mp3', None, "rock")
-
-
-# P.add_song(a)
-# P.add_song(b)
-# P.add_song(c)
-# P.save('1')
-# #P.listen()
-# P.view()
-
     

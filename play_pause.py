@@ -2,8 +2,8 @@ from kivy.app import App
 from Custom_Buttons.play_pause_button import PlayPauseButton
 from kivy.uix.widget import Widget
 from kivy.core.window import Window
-import library
-import library.song as song_module
+#import library
+#import library.song as song_module
 
 class DemoApp(App):
     def build(self):
