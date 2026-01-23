@@ -121,7 +121,7 @@ class AudioController(FloatLayout):
         # Top bar with minimize button
         top_bar = BoxLayout(size_hint=(1, 0.08), padding=[10, 5])
         minimize_btn = Button(
-            text='⌄',
+            text='V',
             font_size='30sp',
             size_hint=(0.15, 1),
             background_color=(0, 0, 0, 0),
