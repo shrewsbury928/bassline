@@ -89,7 +89,16 @@ class LoginScreen(Screen):
         
         button_layout.add_widget(login_btn)
         button_layout.add_widget(register_btn)
+
+        guest_btn = Button(
+            text='Sign in as Guest',
+            background_color=(0.3, 0.5, 0.8, 1),
+            background_normal=''
+        )
+        guest_btn.bind(on_press=self.guest_pressed)
+
         layout.add_widget(button_layout)
+        layout.add_widget(guest_btn)
         
         self.add_widget(layout)
     
@@ -139,6 +148,15 @@ class LoginScreen(Screen):
         elif isinstance(result, list):
             error_msg = '\n'.join(result)
             self.show_popup('Registration Failed', error_msg)
+
+    def guest_pressed(self, instance):
+        self.manager.get_screen('home').set_username('guest')
+        self.username_input.text = ''
+        self.email_input.text = ''
+        self.password_input.text = ''
+        # Switch to home screen
+        self.manager.current = 'home'
+    
     
     def show_popup(self, title, message):
         popup = Popup(

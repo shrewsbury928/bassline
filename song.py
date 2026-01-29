@@ -4,7 +4,11 @@ class Song():
     def __init__(self, mp3_path, genre: str = 'n/a'):
         self.path = mp3_path
         self.paused = True
-        self.token = genre
+        self.tags = TinyTag.get(self.path)
+        if self.tags.genre:
+            self.token = self.tags.genre
+        else:
+            self.token = genre
         
         # Load metadata and cover using TinyTag
         try:
@@ -23,16 +27,16 @@ class Song():
             
             # If no cover found, use default
             if not self.cover:
-                self.cover = "one.png"
+                self.cover = "test_cover.png"
                 
         except Exception as e:
             print(f"Error loading song metadata: {e}")
-            self.cover = "one.png"
+            self.cover = "test_cover.png"
     
     def __str__(self):
         """String representation"""
         try:
-            tags = TinyTag.get(self.path)
-            return f"{tags.title or 'Unknown'} - {tags.artist or 'Unknown Artist'}"
+            
+            return f"{self.tags.title or 'Unknown'} - {self.tags.artist or 'Unknown Artist'}"
         except:
             return f"Song: {self.path}"

@@ -113,9 +113,9 @@ class AudioController(FloatLayout):
         self.full_player = BoxLayout(orientation='vertical')
         self.full_player.size_hint = (1, 1)
         self.full_player.opacity = 0
-        
+        self.background_color = Color(0.65, 0.72, 0.82, 1)
         with self.full_player.canvas.before:
-            Color(0.65, 0.72, 0.82, 1)
+            self.background_color
             self.full_bg = Rectangle(pos=self.full_player.pos, size=self.full_player.size)
         self.full_player.bind(pos=self._update_full_bg, size=self._update_full_bg)
         
@@ -270,6 +270,17 @@ class AudioController(FloatLayout):
                         if isinstance(self.current_song.cover, bytes):
                             # Convert bytes to image
                             image = PILImage.open(io.BytesIO(self.current_song.cover))
+                            pixels = list(image.getdata())
+                            avg_color = tuple(sum(channel) // len(pixels) for channel in zip(*pixels))
+                            
+                            # Normalize color to 0-1 range for Kivy
+                            normalized_color = tuple(c / 255.0 for c in avg_color[:3])
+                            
+                            # Update background color
+                            with self.full_player.canvas.before:
+                                Color(*normalized_color, 1)
+                                self.full_bg = Rectangle(pos=self.full_player.pos, size=self.full_player.size)
+                            
                             # Save temporarily
                             temp_path = 'temp_cover.png'
                             image.save(temp_path)

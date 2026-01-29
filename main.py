@@ -46,6 +46,7 @@ class MainContainer(FloatLayout):
             background_normal='',
             background_color=(0.4, 0.5, 0.75, 1)
         )
+        lib_btn.bind(on_press=lambda x: setattr(self.screen_manager, 'current', 'library'))
         
         home_btn = Button(
             text='Home',
@@ -61,7 +62,8 @@ class MainContainer(FloatLayout):
             background_normal='',
             background_color=(0.4, 0.5, 0.75, 1)
         )
-        
+        search_btn.bind(on_press=lambda x: setattr(self.screen_manager, 'current', 'search'))
+
         self.nav_bar.add_widget(lib_btn)
         self.nav_bar.add_widget(home_btn)
         self.nav_bar.add_widget(search_btn)

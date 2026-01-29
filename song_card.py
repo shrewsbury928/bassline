@@ -51,7 +51,7 @@ class SongCard(BoxLayout):
         
         # Fallback colored rectangle
         with album_art_container.canvas.before:
-            Color(0.6, 0.25, 0.25, 1)
+            Color(0.8, 0.25, 0.25, 1)
             self.album_rect = Rectangle(pos=album_art_container.pos, size=album_art_container.size)
         album_art_container.bind(pos=self._update_album, size=self._update_album)
         
@@ -67,6 +67,9 @@ class SongCard(BoxLayout):
                     self.album_image.source = song.cover
             except Exception as e:
                 print(f"Could not load card cover: {e}")
+                temp_path = f'temp_cover.png'
+                image.save(temp_path)
+                self.album_image.source = temp_path
         
         album_art_container.add_widget(self.album_image)
         
