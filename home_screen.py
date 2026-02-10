@@ -1,12 +1,15 @@
 from kivy.uix.screenmanager import Screen  
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.label import Label
-from kivy.uix.button import Button
 from kivy.uix.scrollview import ScrollView
-from kivy.graphics import Color, Rectangle, RoundedRectangle
+from kivy.graphics import Color, Rectangle
 from kivy.core.window import Window
-from Custom_Buttons.play_pause_button import PlayPauseButton
+
+import random as r
 from song_card import SongCard
+from recommendation_engine import RecommendationEngine
+from library_manager import library
+
 
 class HomeScreen(Screen):
     def __init__(self, **kwargs):
@@ -60,29 +63,60 @@ class HomeScreen(Screen):
         main_layout.add_widget(welcome_box)
         
         # Scrollable content area for song cards
-        scroll_view = ScrollView(size_hint=(1, 0.67))
-        content_layout = BoxLayout(
+        scroll_view = ScrollView(size_hint=(1, 0.82))
+        self.content_layout = BoxLayout(
             orientation='vertical',
             spacing=15,
-            padding=[20, 10],
+            padding=[20, 10, 20, 100],  # Extra bottom padding for mini player
             size_hint_y=None
         )
-        content_layout.bind(minimum_height=content_layout.setter('height'))
+        self.content_layout.bind(minimum_height=self.content_layout.setter('height'))
         
-        # Add song cards (alternating album position)
-        content_layout.add_widget(SongCard("Title", "Description", album_on_right=False))
-        content_layout.add_widget(SongCard("Title", "Description", album_on_right=True))
-        content_layout.add_widget(SongCard("Title", "Description", album_on_right=False))
-        content_layout.add_widget(SongCard("Title", "Description", album_on_right=True))
-        content_layout.add_widget(SongCard("Title", "Description", album_on_right=False))
-        content_layout.add_widget(SongCard("Title", "Description", album_on_right=True))
+        # Load recommended songs
+        self.load_recommendations()
         
-        scroll_view.add_widget(content_layout)
+        scroll_view.add_widget(self.content_layout)
         main_layout.add_widget(scroll_view)
         
-        #util = BoxLayout(size_hint=(1, 0.01))
-
         self.add_widget(main_layout)
+    
+    def load_recommendations(self):
+        """Load recommended songs and create song cards"""
+        try:
+            engine = RecommendationEngine()
+            songs = engine.get_random_recommendations(count=r.randint(4, 7))
+
+            if len(songs) == 0:
+                # No songs found - show message
+                self.content_layout.add_widget(Label(
+                    text='No songs found!\nAdd MP3 files to the "songs" folder',
+                    font_size='16sp',
+                    color=(0.7, 0.7, 0.7, 1),
+                    size_hint_y=None,
+                    height=100
+                ))
+            else:
+                # Create song cards alternating left/right
+                for i, song in enumerate(songs):
+                    album_on_right = (i % 2 == 1)
+                    card = SongCard(song=song, playlist=playlist, album_on_right=album_on_right)
+                    self.content_layout.add_widget(card)
+        
+        except Exception as e:
+            print(f"Error loading recommendations: {e}")
+            # Show error message
+            self.content_layout.add_widget(Label(
+                text=f'Error loading songs:\n{str(e)}',
+                font_size='14sp',
+                color=(1, 0.3, 0.3, 1),
+                size_hint_y=None,
+                height=100
+            ))
+    
+    def refresh_recommendations(self):
+        """Reload recommendations (can be called when user wants new suggestions)"""
+        self.content_layout.clear_widgets()
+        self.load_recommendations()
     
     def set_username(self, username):
         self.username = username
@@ -95,7 +129,3 @@ class HomeScreen(Screen):
     def _update_circle(self, instance, value):
         self.circle.pos = instance.pos
         self.circle.size = instance.size
-    
-    def _update_player(self, instance, value):
-        self.player_rect.pos = instance.pos
-        self.player_rect.size = instance.size
