@@ -1,47 +1,70 @@
-import pygame.mixer as mixer
-from song import Song
-import random as r
+import random
 
-class Playlist():
-    def __init__(self, title, desc = ''):
-        self.title = title
-        self.description = desc
-        self.cover = "one.png"
-        self.songs = []
-        self.queue = []
-        self.run_length = "0m 0s"
-        self.curr_index = 0
-        self.stopped = True
-
-    def add_song(self, song):
-        self.songs.append(song)
-
-    #shuffle button
-    def shuffle(self):
-        self.queue = self.songs
-        shuffle = r.shuffle(self.queue)
-        self.queue = shuffle
-
-    #description set - save button
-    def set_description(self, desc):
-        self.description = desc
-
-    #calculates length in mins + secs
-    def get_length(self):
-        total = 0.0
-        #for i in range(len(self.songs)):
-        #    total+= self.songs[i].tags.duration
-        self.run_length = f"{total//60}m {total%60}s"
-
-    #saves updates
-    def save(self, desc = ''):
-        self.get_length()
-        self.set_description(desc)
-        self.queue = self.songs
-
-    def view(self):
-        print(self.title, self.description, self.run_length)
-        for song in self.songs:
-            print(song.token)
+class Playlist:
+    """Represents a collection of songs"""
     
+    def __init__(self, title, description=""):
+        
+        self.title = title
+        self.description = description
+        self.cover = "one.png"  # Default cover
+        self.songs = []
+        self._queue = []  # Playback queue (for shuffle)
+        self.current_index = 0
+    
+    def add_song(self, song):
+        #add song
+        if song not in self.songs:
+            self.songs.append(song)
+    
+    def remove_song(self, song):
+        #remove song
+        if song in self.songs:
+            self.songs.remove(song)
+    
+    def shuffle(self):
+        #create a copy of songs that is shuffled -> maintains original order
+        self._queue = self.songs.copy()
+        random.shuffle(self._queue)
+        return self._queue
+    
+    def reset_queue(self):
+        #use original order
+        self._queue = self.songs.copy()
+    
+    def set_description(self, description):
+        #set playlist description
+        self.description = description
+    
+    def get_duration(self):
+        #calc total duration
+        total_seconds = sum(song.duration for song in self.songs if hasattr(song, 'duration'))
+        minutes = int(total_seconds // 60)
+        seconds = int(total_seconds % 60)
+        return f"{minutes}m {seconds}s"
+    
+    def save(self, description=""):
+        if description:
+            self.set_description(description)
+        self.reset_queue()
+
+        # save to folder
+
+    
+    def get_song_at(self, index):
+        #get song at index
+        if 0 <= index < len(self.songs):
+            return self.songs[index]
+        return None
+    
+    
+    ### Utility methods ###
+
+    def __len__(self):
+        """Return number of songs"""
+        return len(self.songs)
+    
+    def __str__(self):
+        """String representation"""
+        return f"Playlist: {self.title} ({self.get_song_count()} songs, {self.get_duration()})"
     
