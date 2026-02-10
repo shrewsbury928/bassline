@@ -89,22 +89,22 @@ class AudioController(FloatLayout):
         mini_skip_forward.bind(on_press=lambda x: self.next_song())
         
         self.mini_player.add_widget(self.mini_play_btn)
-        self.mini_player.add_widget(self.mini_song_label)
+        
+        # Make song label clickable to expand
+        self.mini_song_label_btn = Button(
+            background_color=(0, 0, 0, 0),
+            background_normal=''
+        )
+        self.mini_song_label_btn.bind(on_press=lambda x: self.expand())
+        label_container = BoxLayout()
+        label_container.add_widget(self.mini_song_label_btn)
+        label_container.add_widget(self.mini_song_label)
+        
+        self.mini_player.add_widget(label_container)
         self.mini_player.add_widget(mini_skip_back)
         self.mini_player.add_widget(mini_skip_forward)
         
-        # Clickable overlay to expand - same size and position as mini_player
-        self.expand_btn = Button(
-            background_color=(0, 0, 0, 0),
-            background_normal='',
-            size_hint=(0.9, None),
-            height=70,
-            pos_hint={'center_x': 0.5, 'y': 0.12}
-        )
-        self.expand_btn.bind(on_press=lambda x: self.expand())
-        
         self.mini_container.add_widget(self.mini_player)
-        self.mini_container.add_widget(self.expand_btn)
         
         self.add_widget(self.mini_container)
         
@@ -113,9 +113,10 @@ class AudioController(FloatLayout):
         self.full_player = BoxLayout(orientation='vertical')
         self.full_player.size_hint = (1, 1)
         self.full_player.opacity = 0
-        self.background_color = Color(0.65, 0.72, 0.82, 1)
+        
+        # Set background color to match design (light blue)
         with self.full_player.canvas.before:
-            self.background_color
+            Color(0.65, 0.72, 0.82, 1)
             self.full_bg = Rectangle(pos=self.full_player.pos, size=self.full_player.size)
         self.full_player.bind(pos=self._update_full_bg, size=self._update_full_bg)
         
@@ -268,21 +269,9 @@ class AudioController(FloatLayout):
                 if hasattr(self.current_song, 'cover') and self.current_song.cover:
                     try:
                         if isinstance(self.current_song.cover, bytes):
-                            # Convert bytes to image
-                            image = PILImage.open(io.BytesIO(self.current_song.cover))
-                            pixels = list(image.getdata())
-                            avg_color = tuple(sum(channel) // len(pixels) for channel in zip(*pixels))
-                            
-                            # Normalize color to 0-1 range for Kivy
-                            normalized_color = tuple(c / 255.0 for c in avg_color[:3])
-                            
-                            # Update background color
-                            with self.full_player.canvas.before:
-                                Color(*normalized_color, 1)
-                                self.full_bg = Rectangle(pos=self.full_player.pos, size=self.full_player.size)
-                            
                             # Save temporarily
                             temp_path = 'temp_cover.png'
+                            image = PILImage.open(io.BytesIO(self.current_song.cover))
                             image.save(temp_path)
                             self.album_image.source = temp_path
                         elif isinstance(self.current_song.cover, str):
@@ -318,8 +307,8 @@ class AudioController(FloatLayout):
                 mixer.music.play()
                 self.current_song.paused = False
                 
-                self.mini_play_btn.set_playing(True)
-                self.full_play_btn.set_playing(True)
+                self.mini_play_btn.set_playing(True, animate=False)
+                self.full_play_btn.set_playing(True, animate=False)
                 
                 # Start updating progress
                 if self.update_event:
@@ -383,8 +372,8 @@ class AudioController(FloatLayout):
             else:
                 if self.update_event:
                     self.update_event.cancel()
-                self.mini_play_btn.set_playing(False)
-                self.full_play_btn.set_playing(False)
+                self.mini_play_btn.set_playing(False, animate=False)
+                self.full_play_btn.set_playing(False, animate=False)
     
     def _on_slider_seek(self, instance, touch):
         """Handle seeking when slider is moved"""
@@ -407,7 +396,6 @@ class AudioController(FloatLayout):
         anim_full.start(self.full_player)
         anim_mini.start(self.mini_container)
         anim_mini.start(self.mini_player)
-        anim_mini.start(self.expand_btn)
     
     def expand(self):
         """Expand to full player with smooth animation"""
@@ -420,7 +408,6 @@ class AudioController(FloatLayout):
         
         anim_mini.start(self.mini_container)
         anim_mini.start(self.mini_player)
-        anim_mini.start(self.expand_btn)
         anim_full.start(self.full_player)
     
     def hide(self):
@@ -428,7 +415,6 @@ class AudioController(FloatLayout):
         self.size = (0, 0)
         self.mini_container.opacity = 0
         self.mini_player.opacity = 0
-        self.expand_btn.opacity = 0
         self.full_player.opacity = 0
     
     def _update_mini_bg(self, instance, value):

@@ -58,18 +58,10 @@ class PlayPauseButton(ButtonBehavior, Widget):
         self._right_bar.size = (bar_w, bar_h)
 
     def on_press(self):
-        # toggle state and animate crossfade + small transform for polish
-        self.is_playing = not self.is_playing
-        #print(f"PlayPauseButton pressed -> is_playing={self.is_playing}")
-        if self.is_playing:
-            # triangle → fade out, bars fade in
-            anim = Animation(_tri_a=0, _bar_a=1, d=0.18, t='out_quad')
-        else:
-            anim = Animation(_tri_a=1, _bar_a=0, d=0.18, t='out_quad')
-
-        # bind properties used by animation (we'll map them to Color/Scale)
-        anim.bind(on_progress=self._anim_progress)
-        anim.start(self)
+        # IMPORTANT: Call parent to fire the event that bound callbacks listen to
+        # The bound callback will handle state changes via set_playing()
+        super().on_press()
+        print(f"PlayPauseButton pressed -> is_playing={self.is_playing}")
 
     # animation attributes (simple attributes used by Animation)
     _tri_a = 1.0
@@ -85,9 +77,24 @@ class PlayPauseButton(ButtonBehavior, Widget):
         self._bar_color.a = ba
         # no transforms here — keep it simple and reliable for clicks
 
-    def set_playing(self, playing: bool):
+    def set_playing(self, playing: bool, animate=True):
+        """Set the playing state and optionally animate the transition"""
+        old_state = self.is_playing
         self.is_playing = bool(playing)
-        self._tri_color.a = 0.0 if self.is_playing else 1.0
-        self._bar_color.a = 1.0 if self.is_playing else 0.0
+        
+        if animate and old_state != self.is_playing:
+            # Animate the transition
+            if self.is_playing:
+                # triangle → fade out, bars fade in
+                anim = Animation(_tri_a=0, _bar_a=1, d=0.18, t='out_quad')
+            else:
+                # bars → fade out, triangle fade in
+                anim = Animation(_tri_a=1, _bar_a=0, d=0.18, t='out_quad')
+            anim.bind(on_progress=self._anim_progress)
+            anim.start(self)
+        else:
+            # Instantly set without animation
+            self._tri_color.a = 0.0 if self.is_playing else 1.0
+            self._bar_color.a = 1.0 if self.is_playing else 0.0
 
 __all__ = ['PlayPauseButton']
