@@ -7,7 +7,7 @@ from kivy.graphics import Color, Rectangle, RoundedRectangle
 from kivy.core.window import Window
 from Custom_Buttons.play_pause_button import PlayPauseButton
 
-import song_tile
+import lib_tile
 
 class LibraryScreen(Screen):
     def __init__(self, **kwargs):

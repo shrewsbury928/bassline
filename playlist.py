@@ -7,7 +7,7 @@ class Playlist:
         
         self.title = title
         self.description = description
-        self.cover = "one.png"  # Default cover
+        self.cover = "library/cover_if_none.png"  # Default cover
         self.songs = []
         self._queue = []  # Playback queue (for shuffle)
         self.current_index = 0
