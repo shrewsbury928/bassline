@@ -12,6 +12,8 @@ import os
 # Import screens
 from home_screen import HomeScreen
 from login_screen import LoginScreen
+from library_screen import LibraryScreen
+from search_screen import SearchScreen
 
 # Import audio controller
 from audio_controller import AudioController
@@ -30,6 +32,8 @@ class MainContainer(FloatLayout):
         self.screen_manager = ScreenManager()
         self.screen_manager.add_widget(LoginScreen(name='login'))
         self.screen_manager.add_widget(HomeScreen(name='home'))
+        self.screen_manager.add_widget(LibraryScreen(name='library'))
+        self.screen_manager.add_widget(SearchScreen(name='search'))
         
         # Bind to screen changes to show/hide nav bar
         self.screen_manager.bind(current=self._on_screen_change)
