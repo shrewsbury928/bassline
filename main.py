@@ -80,7 +80,7 @@ class MainContainer(FloatLayout):
         self.add_widget(self.audio_controller)
     
     def _on_screen_change(self, instance, value):
-        """Show/hide navigation bar based on current screen"""
+        #show nav bar on all screens except login
         if value == 'login':
             self.nav_bar.opacity = 0
         else:
