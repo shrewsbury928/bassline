@@ -6,6 +6,7 @@ from kivy.uix.scrollview import ScrollView
 from kivy.graphics import Color, Rectangle
 from kivy.core.window import Window
 from lib_tile import LibraryTile
+from recommendation_engine import RecommendationEngine
 
 
 class LibraryScreen(Screen):
@@ -81,7 +82,9 @@ class LibraryScreen(Screen):
 
     def create_recommended_playlist(self):
         # Placeholder for recommended playlist creation logic
-        pass
+        engine = RecommendationEngine()
+        rand_songs = engine.get_random_recommendations()
+        playlist = engine.create_playlist_from_songs(rand_songs, title="SAMPLE", description="TEST")
 
     def create_playlist(self):
         # Placeholder for playlist creation logic
