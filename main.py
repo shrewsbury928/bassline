@@ -24,7 +24,7 @@ from playlist import Playlist
 
 
 class MainContainer(FloatLayout):
-    """Main container that holds everything including the floating audio controller"""
+    #contruct the app
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         
