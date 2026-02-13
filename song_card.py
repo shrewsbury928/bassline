@@ -9,30 +9,25 @@ from PIL import Image as PILImage
 
 
 class SongCard(BoxLayout):
-    def __init__(self, song=None, playlist=None, album_on_right=False, **kwargs):
+    def __init__(self, title="Title", artist = 'n/a', song=None, playlist=None, album_on_right=False, **kwargs):
         super().__init__(**kwargs)
         self.orientation = 'horizontal'
         self.size_hint = (0.9, None)
         self.height = 120
         self.spacing = 10
         self.padding = [10, 10]
+        self.card_type = 'song' if song else 'playlist'
         
         # Store song and playlist references
-        self.song = song
-        self.playlist = playlist
-        
-        # Get title and description from song if available
-        title = "Title"
-        description = "Description"
-        
-        if song:
-            try:
-                from tinytag import TinyTag
-                tags = TinyTag.get(song.path)
-                title = tags.title or "Unknown Title"
-                description = tags.artist or "Unknown Artist"
-            except:
-                pass
+        if self.card_type == 'song':
+            self.song = song
+            self.title = song.title if hasattr(song, 'title') else title
+            self.artist = song.artist if hasattr(song, 'artist') else artist
+        else:
+            self.playlist = playlist
+            self.title = playlist.name if hasattr(title, 'title') else title
+            self.description = playlist.description if hasattr(playlist, 'description') else "--"
+                
         
         # Background with rounded corners
         with self.canvas.before:
@@ -66,10 +61,8 @@ class SongCard(BoxLayout):
                 elif isinstance(song.cover, str):
                     self.album_image.source = song.cover
             except Exception as e:
-                print(f"Could not load card cover: {e}")
-                temp_path = f'temp_cover.png'
-                image.save(temp_path)
-                self.album_image.source = temp_path
+                image = PILImage.open('library/cover_if_none.png')
+                
         
         album_art_container.add_widget(self.album_image)
         
@@ -126,4 +119,4 @@ class SongCard(BoxLayout):
     
     def _update_album(self, instance, value):
         self.album_rect.pos = instance.pos
-        self.album_rect.size = instance.size
+        self.album_rect.size = instance.size  
