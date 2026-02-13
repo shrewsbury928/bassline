@@ -22,7 +22,7 @@ class Song:
                 title = "Unknown Title"
                 artist = "Unknown Artist"
                 album = "Unknown Album"
-                genre = genre or "Unknown"
+                genre = "Unknown"
                 duration = 0
             self.tags = MinimalTags()
             self.genre = genre or 'Unknown'
