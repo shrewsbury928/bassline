@@ -8,7 +8,7 @@ from kivy.core.window import Window
 import random as r
 from song_card import SongCard
 from recommendation_engine import RecommendationEngine
-from library_manager import library
+from songs_manager import library
 
 
 class HomeScreen(Screen):

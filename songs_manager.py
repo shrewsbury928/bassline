@@ -17,7 +17,7 @@ class SongLibrary:
         self.all_songs = []
         
         if not os.path.exists(self.songs_folder):
-            print(f"Songs folder '{self.songs_folder}' not found! Creating it...")
+            #print(f"Songs folder '{self.songs_folder}' not found! Creating it...")
             os.makedirs(self.songs_folder)
             return self.all_songs
         
