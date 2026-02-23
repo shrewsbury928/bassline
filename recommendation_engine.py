@@ -1,16 +1,17 @@
 import random
 from playlist import Playlist
-from songs_manager import library
+from songs_manager import SongLibrary as song_lib
+
 
 class RecommendationEngine:
     """Provides song recommendations based on the library"""
     
     def __init__(self):
-        self.songs = library.get_all_songs()
+        self.songs = song_lib.get_all_songs()
     
     def get_random_recommendations(self, count=4):
         #random songs for sample testing
-        all_songs = library.get_all_songs()
+        all_songs = song_lib.get_all_songs()
         
         if len(all_songs) == 0:
             return []
@@ -29,7 +30,7 @@ class RecommendationEngine:
     
     def get_genre_recommendations(self, genre, count=4):
         """Get recommendations for a specific genre"""
-        genre_songs = library.get_songs_by_genre(genre)
+        genre_songs = song_lib.get_songs_by_genre(genre)
         
         if len(genre_songs) == 0:
             return []
@@ -39,7 +40,7 @@ class RecommendationEngine:
     
     def get_artist_recommendations(self, artist, count=4):
         """Get songs from a specific artist"""
-        artist_songs = library.get_songs_by_artist(artist)
+        artist_songs = song_lib.get_songs_by_artist(artist)
         
         if len(artist_songs) == 0:
             return []

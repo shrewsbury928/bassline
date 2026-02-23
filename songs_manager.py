@@ -4,7 +4,7 @@ from song import Song
 class SongLibrary:
     """Global song library manager - loads and manages all songs"""
     
-    def __init__(self, songs_folder="library"):
+    def __init__(self, songs_folder="music_library"):
         self.songs_folder = songs_folder
         self.all_songs = []
         self._loaded = False
