@@ -80,7 +80,25 @@ class PlayPauseButton(ButtonBehavior, Widget):
     def set_playing(self, playing: bool, animate=True):
         """Set the playing state and optionally animate the transition"""
         old_state = self.is_playing
+    def set_playing(self, playing: bool, animate=True):
+        """Set the playing state and optionally animate the transition"""
+        old_state = self.is_playing
         self.is_playing = bool(playing)
+        
+        if animate and old_state != self.is_playing:
+            # Animate the transition
+            if self.is_playing:
+                # triangle → fade out, bars fade in
+                anim = Animation(_tri_a=0, _bar_a=1, d=0.18, t='out_quad')
+            else:
+                # bars → fade out, triangle fade in
+                anim = Animation(_tri_a=1, _bar_a=0, d=0.18, t='out_quad')
+            anim.bind(on_progress=self._anim_progress)
+            anim.start(self)
+        else:
+            # Instantly set without animation
+            self._tri_color.a = 0.0 if self.is_playing else 1.0
+            self._bar_color.a = 1.0 if self.is_playing else 0.0
         
         if animate and old_state != self.is_playing:
             # Animate the transition

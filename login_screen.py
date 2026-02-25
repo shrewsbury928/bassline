@@ -3,7 +3,6 @@ from kivy.app import App
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.label import Label
 from kivy.uix.textinput import TextInput
-from kivy.uix.button import Button
 from kivy.uix.popup import Popup
 from kivy.uix.screenmanager import ScreenManager, Screen
 from kivy.uix.slider import Slider
@@ -11,7 +10,7 @@ from kivy.uix.scrollview import ScrollView
 from kivy.graphics import Color, Rectangle, Line, RoundedRectangle
 from kivy.core.window import Window
 from Custom_Buttons.play_pause_button import PlayPauseButton
-
+from kivy.uix.button import Button
 # Import your backend functions
 from backend import login
 
@@ -93,6 +92,7 @@ class LoginScreen(Screen):
         guest_btn = Button(
             text='Sign in as Guest',
             background_color=(0.3, 0.5, 0.8, 1),
+            size_hint=(1, 0.15),
             background_normal=''
         )
         guest_btn.bind(on_press=self.guest_pressed)
