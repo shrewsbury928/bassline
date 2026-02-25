@@ -6,6 +6,7 @@ class Playlist:
     def __init__(self, title, description=""):
         
         self.title = title
+        self.id = self._generate_id()
         self.description = description
         self.cover = "library/cover_if_none.png"   # Default cover
         self.songs = []
@@ -57,6 +58,9 @@ class Playlist:
             return self.songs[index]
         return None
     
+    def _generate_id(self):
+        #generate unique id
+        return f"{self.title}_{random.randint(1000, 9999)}"
     
     ### Utility methods ###
 
