@@ -8,7 +8,7 @@ from kivy.uix.popup import Popup
 from kivy.uix.scrollview import ScrollView
 from kivy.graphics import Color, Rectangle
 from kivy.core.window import Window
-from library_tile import LibraryTile
+from lib_tile import LibraryTile
 from playlist import Playlist
 
 

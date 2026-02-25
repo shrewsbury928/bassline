@@ -7,11 +7,12 @@ class RecommendationEngine:
     """Provides song recommendations based on the library"""
     
     def __init__(self):
-        self.songs = song_lib.get_all_songs()
+        self.manager = song_lib()
+        self.songs = self.manager.get_all_songs()
     
     def get_random_recommendations(self, count=4):
         #random songs for sample testing
-        all_songs = song_lib.get_all_songs()
+        all_songs = self.manager.get_all_songs()
         
         if len(all_songs) == 0:
             return []
@@ -20,9 +21,10 @@ class RecommendationEngine:
         num_songs = min(count, len(all_songs))
         return random.sample(all_songs, num_songs)
     
-    def create_playlist_from_songs(self, songs, title="Recommended", description="Auto-generated playlist"):
+    def create_playlist_from_songs(self, title="Recommended", description="Auto-generated playlist"):
         #random playlist creation from songs
         playlist = Playlist(title, description)
+        songs = self.get_random_recommendations(count=10)
         for song in songs:
             playlist.add_song(song)
         playlist.save()

@@ -101,5 +101,4 @@ if __name__ == '__main__':
     Config.set('graphics', 'resizable', False)
     
     BasslineApp().run()
-
-#commit test
+    

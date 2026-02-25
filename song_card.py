@@ -9,25 +9,25 @@ from PIL import Image as PILImage
 
 
 class SongCard(BoxLayout):
-    def __init__(self, title="Title", artist = 'n/a', song=None, playlist=None, album_on_right=False, **kwargs):
+    def __init__(self, title="Title", artist='n/a', song=None, album_on_right=False, **kwargs):
         super().__init__(**kwargs)
         self.orientation = 'horizontal'
         self.size_hint = (0.9, None)
         self.height = 120
         self.spacing = 10
         self.padding = [10, 10]
-        self.card_type = 'song' if song else 'playlist'
-        
-        # Store song and playlist references
-        if self.card_type == 'song':
-            self.song = song
-            self.title = song.title if hasattr(song, 'title') else title
-            self.artist = song.artist if hasattr(song, 'artist') else artist
-        else:
-            self.playlist = playlist
-            self.title = playlist.name if hasattr(title, 'title') else title
-            self.description = playlist.description if hasattr(playlist, 'description') else "--"
-                
+        self.song = song
+
+        # Extract song information if available
+        if self.song and hasattr(self.song, 'path'):
+            try:
+                from tinytag import TinyTag
+                tags = TinyTag.get(self.song.path)
+                title = tags.title or "Unknown Title"
+                artist = tags.artist or "Unknown Artist"
+            except Exception as e:
+                print(f"Error loading song tags: {e}")
+                # Keep default values if loading fails
         
         # Background with rounded corners
         with self.canvas.before:
@@ -61,14 +61,20 @@ class SongCard(BoxLayout):
                 elif isinstance(song.cover, str):
                     self.album_image.source = song.cover
             except Exception as e:
-                image = PILImage.open('library/cover_if_none.png')
-                
+                print(f"Error loading cover: {e}")
+                try:
+                    # Try to load default cover
+                    self.album_image.source = 'library/cover_if_none.png'
+                except:
+                    pass
         
         album_art_container.add_widget(self.album_image)
         
         # Info section
         info_layout = BoxLayout(orientation='vertical', padding=[5, 10])
-        info_layout.add_widget(Label(
+        
+        # Title label
+        title_label = Label(
             text=title,
             font_size='16sp',
             bold=True,
@@ -76,17 +82,21 @@ class SongCard(BoxLayout):
             halign='left',
             valign='bottom',
             color=(1, 1, 1, 1)
-        ))
-        desc_label = Label(
-            text=description,
+        )
+        title_label.bind(size=title_label.setter('text_size'))
+        info_layout.add_widget(title_label)
+        
+        # Artist label
+        artist_label = Label(
+            text=artist,
             font_size='13sp',
             size_hint=(1, 0.5),
             halign='left',
             valign='top',
             color=(0.9, 0.9, 0.9, 1)
         )
-        desc_label.bind(size=desc_label.setter('text_size'))
-        info_layout.add_widget(desc_label)
+        artist_label.bind(size=artist_label.setter('text_size'))
+        info_layout.add_widget(artist_label)
         
         # Play button
         self.play_btn = PlayPauseButton(size_hint=(None, None), size=(30, 30))
@@ -110,7 +120,7 @@ class SongCard(BoxLayout):
             audio_controller = app.root.audio_controller
             
             # Load the song and show mini player
-            audio_controller.load_song(self.song, self.playlist)
+            audio_controller.load_song(self.song)
             audio_controller.show_mini()
     
     def _update_bg(self, instance, value):
@@ -119,4 +129,4 @@ class SongCard(BoxLayout):
     
     def _update_album(self, instance, value):
         self.album_rect.pos = instance.pos
-        self.album_rect.size = instance.size  
+        self.album_rect.size = instance.size

@@ -99,7 +99,7 @@ class HomeScreen(Screen):
                 # Create song cards alternating left/right
                 for i, song in enumerate(songs):
                     album_on_right = (i % 2 == 1)
-                    card = SongCard(song=song, playlist=playlist, album_on_right=album_on_right)
+                    card = SongCard(song=song, album_on_right=album_on_right)
                     self.content_layout.add_widget(card)
         
         except Exception as e:
