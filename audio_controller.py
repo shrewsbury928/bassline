@@ -25,6 +25,13 @@ class AudioController(FloatLayout):
         self.current_playlist = None
         self.current_song = None
         self.current_index = 0
+        self.queue = []
+
+        if self.current_playlist:
+            self.queue = self.current_playlist.songs.copy()
+        elif self.current_song:
+            self.queue = [self.current_song]
+
         
         # Initialize pygame mixer with music
         try:
@@ -345,18 +352,18 @@ class AudioController(FloatLayout):
     
     def next_song(self):
         """Skip to next song in playlist"""
-        if self.current_playlist and len(self.current_playlist.songs) > 0:
-            self.current_index = (self.current_index + 1) % len(self.current_playlist.songs)
-            self.current_song = self.current_playlist.songs[self.current_index]
+        if self.queue and len(self.queue) > 0:
+            self.current_index = (self.current_index + 1) % len(self.queue)
+            self.current_song = self.queue[self.current_index]
             mixer.music.stop()
             self.update_ui()
             self.play()
     
     def previous_song(self):
         """Go to previous song in playlist"""
-        if self.current_playlist and len(self.current_playlist.songs) > 0:
-            self.current_index = (self.current_index - 1) % len(self.current_playlist.songs)
-            self.current_song = self.current_playlist.songs[self.current_index]
+        if self.queue and len(self.queue) > 0:
+            self.current_index = (self.current_index - 1) % len(self.queue)
+            self.current_song = self.queue[self.current_index]
             mixer.music.stop()
             self.update_ui()
             self.play()
