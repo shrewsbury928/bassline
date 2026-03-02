@@ -1,4 +1,5 @@
 import random
+import song
 
 class Playlist:
     """Represents a collection of songs"""
@@ -39,7 +40,7 @@ class Playlist:
     
     def get_duration(self):
         #calc total duration
-        total_seconds = sum(song.duration for song in self.songs if hasattr(song, 'duration'))
+        total_seconds = sum(song.duration for song in self.songs)
         minutes = int(total_seconds // 60)
         seconds = int(total_seconds % 60)
         return f"{minutes}m {seconds}s"
@@ -71,4 +72,24 @@ class Playlist:
     def __str__(self):
         """String representation"""
         return f"Playlist: {self.title} ({self.get_song_count()} songs, {self.get_duration()})"
+    
+    def view(self):
+        print(self.title, self.description, self.get_duration())
+        for song in self.songs:
+            print(song.token)
+
+Playlist = Playlist("test")
+a = song.Song("library/music_library/edm_test.mp3", 'lofi')
+b = song.Song("library/music_library/edm_test.mp3", 'pop')
+c = song.Song("library/music_library/edm_test.mp3", 'rock')
+
+Playlist.view()
+
+Playlist.add_song(a)
+Playlist.add_song(b)
+Playlist.add_song(c)
+Playlist.save('test description')
+
+Playlist.view()
+
     

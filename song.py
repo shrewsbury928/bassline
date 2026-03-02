@@ -19,6 +19,7 @@ class Song():
                 self.token = self.tags.genre
             else:
                 self.token = genre
+
         except Exception as e:
             print(f"Error loading song metadata: {e}")
             self.tags = None
