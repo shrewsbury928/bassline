@@ -6,7 +6,7 @@ import os
 
 # Use an absolute path for the database file so it opens regardless
 # of the current working directory when the app is launched.
-DB_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'bassline.db'))
+DB_PATH = os.path.join(os.path.dirname(__file__), 'users.db')
 db = sql.connect(DB_PATH)
 c = db.cursor() #cursor
 
@@ -26,6 +26,10 @@ CREATE TABLE IF NOT EXISTS profiles (
 #function to determine whether username or email is present
 def validate(username, email):
     #check if email exists
+    email_endings = ['.com', '.co', '.org', '.edu', '.net', '.gov', '.io', '.me', '.us', '.uk', '.ca', '.au', '.de', '.fr', '.jp', '.cn']
+    if email.count('@') != 1 or not any(email.endswith(ending) for ending in email_endings):
+        return False
+    
     c.execute("SELECT userID FROM profiles WHERE email = ?", (email,))
     email_check = c.fetchone()
     if email_check: #if a value is present
@@ -39,7 +43,7 @@ def validate(username, email):
 
     return True
 
-#function to make sure password is okay then add user to database  
+#registration -> validate password, hash password, insert into database  
 def register(userInput, emailInput, passwordInput):    
     valid = validate(userInput, emailInput)
 
@@ -47,8 +51,8 @@ def register(userInput, emailInput, passwordInput):
         error = []
         if not len(passwordInput) >= 8:
             error.append('Password must be at least 8 characters')
-        if not any(char.isdigit() for char in passwordInput):
-            error.append( 'Password must contain at least 1 number')
+        if not (any(char.isdigit() for char in passwordInput) and any(char.isalpha() for char in passwordInput)):
+            error.append('Password must contain at least 1 number and 1 letter')
         if not any(char in string.punctuation for char in passwordInput):
             error.append('Password must contain at least 1 punctuation')
 
@@ -59,7 +63,7 @@ def register(userInput, emailInput, passwordInput):
             hashed = hashlib.sha256(passwordInput.encode('utf8')).digest()
             c.execute('INSERT INTO profiles (Username, Email, Password, Attempts, Lockout_Date) VALUES(?,?,?,?,?)', (userInput, emailInput, hashed, 0, None))
             db.commit()
-            #print("done")
+            #print("done\n")
             return True
     else:
         #print('Username or email exists already')
@@ -105,4 +109,5 @@ def login(userInput, emailInput, passwordInput):
     db.commit()
     
     return 'Application Locked' if attempts >= 5 else 'Incorrect username/password'
-    
+
+print(register('a', 'a@a.com', '12345678!')) #must contain a letter and a number
