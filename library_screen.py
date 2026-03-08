@@ -146,7 +146,10 @@ class LibraryScreen(Screen):
             
             # Create new playlist
             new_playlist = Playlist(title, desc_input.text.strip())
+            print(f"Created playlist: {new_playlist.title}, desc: {new_playlist.description}")
             self.user_playlists.append(new_playlist)
+            print(f"Total playlists: {len(self.user_playlists)}")
+            print(f"user playlists: {[p.title for p in self.user_playlists]}")
             
             # Refresh the grid
             self.refresh_library()
@@ -162,8 +165,10 @@ class LibraryScreen(Screen):
     
     def refresh_library(self):
         """Refresh the library grid with current playlists"""
+        print(f"Refreshing library with {len(self.user_playlists)} playlists")
         self.grid_layout.clear_widgets()
         for playlist in self.user_playlists:
+            print(f"Creating tile for playlist: {playlist.title}")
             tile = LibraryTile(playlist=playlist)
             self.grid_layout.add_widget(tile)
     

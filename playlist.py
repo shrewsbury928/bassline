@@ -1,74 +1,61 @@
-import random
+import pygame.mixer as mixer
+from song import Song
+import random as r
 
-class Playlist:
-    """Represents a collection of songs"""
-    
+class Playlist():
     def __init__(self, title, description=""):
-        
         self.title = title
-        self.id = self._generate_id()
         self.description = description
-        self.cover = "library/cover_if_none.png"   # Default cover
+        self.cover = "images/Placeholder_Song.png"  # Default cover
         self.songs = []
-        self._queue = []  # Playback queue (for shuffle)
-        self.current_index = 0
-    
+        self.run_length = "0m 0s"
+        self.stopped = True
+
     def add_song(self, song):
-        #add song
-        if song not in self.songs:
-            self.songs.append(song)
-    
-    def remove_song(self, song):
-        #remove song
-        if song in self.songs:
-            self.songs.remove(song)
-    
+        self.songs.append(song)
+
+    #shuffle button
     def shuffle(self):
-        #create a copy of songs that is shuffled -> maintains original order
-        self._queue = self.songs.copy()
-        random.shuffle(self._queue)
-        return self._queue
-    
-    def reset_queue(self):
-        #use original order
-        self._queue = self.songs.copy()
-    
-    def set_description(self, description):
-        #set playlist description
-        self.description = description
-    
-    def get_duration(self):
-        #calc total duration
-        total_seconds = sum(song.duration for song in self.songs if hasattr(song, 'duration'))
-        minutes = int(total_seconds // 60)
-        seconds = int(total_seconds % 60)
-        return f"{minutes}m {seconds}s"
-    
-    def save(self, description=""):
-        if description:
-            self.set_description(description)
-        self.reset_queue()
+        r.shuffle(self.songs)
 
-        # save to folder
+    #play button
+    def listen(self):
+        curr_index = 0
 
-    
-    def get_song_at(self, index):
-        #get song at index
-        if 0 <= index < len(self.songs):
-            return self.songs[index]
-        return None
-    
-    def _generate_id(self):
-        #generate unique id
-        return f"{self.title}_{random.randint(1000, 9999)}"
-    
-    ### Utility methods ###
+        self.songs[curr_index].audio.play()
+        self.stopped = False
+        
+        #queue tracker
+        while not self.stopped:            
+            current = self.songs[curr_index].audio
+            if curr_index+1 < len(self.songs):
+                nxt = self.songs[curr_index+1].audio
+            else:
+                nxt = self.songs[0].audio
 
-    def __len__(self):
-        """Return number of songs"""
-        return len(self.songs)
-    
-    def __str__(self):
-        """String representation"""
-        return f"Playlist: {self.title} ({self.get_song_count()} songs, {self.get_duration()})"
-    
+            if not mixer.music.get_busy() or self.stopped:
+                mixer.play(nxt)
+
+            curr_index += 1   
+            
+             
+    def stop(self):
+        mixer.stop()
+        self.stopped = True
+
+    #description set - save button
+    def set_description(self, desc):
+        self.description = desc
+
+    #calculates length in mins + secs
+    def get_length(self):
+        total = 0.0
+        #for i in range(len(self.songs)):
+        #    total+= self.songs[i].tags.duration
+        self.run_length = f"{total//60}m {total%60}s"
+
+    #saves updates
+    def save(self, desc=""):
+        self.get_length()
+        if desc:
+            self.set_description(desc)

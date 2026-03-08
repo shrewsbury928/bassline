@@ -253,10 +253,9 @@ class PlaylistViewer(FloatLayout):
         self.viewer.add_widget(scroll_view)
         self.add_widget(self.viewer)
     
-    def show(self, playlist):
-        """Show the playlist viewer with the given playlist"""
+    def load_playlist(self, playlist):
+        """Load a playlist into the viewer"""
         self.current_playlist = playlist
-        self.size = Window.size
         
         # Update UI with playlist info
         self.title_label.text = playlist.title if playlist else 'Playlist'
@@ -279,10 +278,17 @@ class PlaylistViewer(FloatLayout):
         
         # Load songs
         self._refresh_songs()
+    
+    def show(self):
+        """Show the playlist viewer with animation"""
+        print(f"PlaylistViewer.show() called")
+        self.size = Window.size
         
         # Animate in
         anim = Animation(opacity=1, duration=0.3, t='out_quad')
         anim.start(self.viewer)
+        print(f"Animation started, opacity: {self.viewer.opacity}")
+    
     
     def hide(self):
         """Hide the playlist viewer"""

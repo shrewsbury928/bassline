@@ -13,10 +13,10 @@ import os
 from home_screen import HomeScreen
 from login_screen import LoginScreen
 from library_screen import LibraryScreen
-from search_screen import SearchScreen
 
 # Import audio controller
 from audio_controller import AudioController
+from playlist_viewer import PlaylistViewer
 
 # Import song/playlist classes
 from song import Song
@@ -24,7 +24,7 @@ from playlist import Playlist
 
 
 class MainContainer(FloatLayout):
-    #contruct the app
+    """Main container that holds everything including the floating audio controller"""
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         
@@ -33,7 +33,6 @@ class MainContainer(FloatLayout):
         self.screen_manager.add_widget(LoginScreen(name='login'))
         self.screen_manager.add_widget(HomeScreen(name='home'))
         self.screen_manager.add_widget(LibraryScreen(name='library'))
-        self.screen_manager.add_widget(SearchScreen(name='search'))
         
         # Bind to screen changes to show/hide nav bar
         self.screen_manager.bind(current=self._on_screen_change)
@@ -75,12 +74,16 @@ class MainContainer(FloatLayout):
         # Add nav bar BEFORE audio controller
         self.add_widget(self.nav_bar)
         
-        # Floating audio controller (on top of everything) - ADD THIS LAST!
+        # Floating playlist viewer (above nav bar, below audio controller)
+        self.playlist_viewer = PlaylistViewer()
+        self.add_widget(self.playlist_viewer)
+        
+        # Floating audio controller (on top of everything)
         self.audio_controller = AudioController()
         self.add_widget(self.audio_controller)
     
     def _on_screen_change(self, instance, value):
-        #show nav bar on all screens except login
+        """Show/hide navigation bar based on current screen"""
         if value == 'login':
             self.nav_bar.opacity = 0
         else:
@@ -101,4 +104,3 @@ if __name__ == '__main__':
     Config.set('graphics', 'resizable', False)
     
     BasslineApp().run()
-    

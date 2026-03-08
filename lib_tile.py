@@ -1,5 +1,6 @@
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.behaviors import ButtonBehavior
+from kivy.uix.button import Button
 from kivy.uix.label import Label
 from kivy.uix.image import Image
 from kivy.graphics import Color, Rectangle, RoundedRectangle
@@ -9,23 +10,27 @@ import io
 from PIL import Image as PILImage
 
 
-class ClickableTileContainer(ButtonBehavior, BoxLayout):
-    """Clickable container for the tile"""
-    pass
-
-
 class LibraryTile(BoxLayout):
     """Square tile for library grid view"""
     def __init__(self, playlist=None, **kwargs):
+        print(f"\n=== LibraryTile.__init__ START ===")
+        print(f"playlist parameter: {playlist}")
+        print(f"playlist type: {type(playlist)}")
+        if playlist:
+            print(f"playlist.title: {playlist.title}")
+        print(f"kwargs: {kwargs}")
+        
         super().__init__(**kwargs)
         self.orientation = 'vertical'
         self.size_hint = (None, None)
-        self.size = (120, 120)
+        self.size = (120, 150)
         self.spacing = 0
         self.padding = 0
         
         # Store playlist reference
         self.playlist = playlist
+        print(f"self.playlist after assignment: {self.playlist}")
+        print(f"=== LibraryTile.__init__ END ===\n")
         
         # Get title and description from playlist if available
         title = "Untitled"
@@ -34,82 +39,39 @@ class LibraryTile(BoxLayout):
             title = playlist.title if playlist.title else "Untitled"
             description = playlist.description if hasattr(playlist, 'description') and playlist.description else ""
         
-        # Main container with rounded corners and red background
-        # Make this clickable
-        tile_container = ClickableTileContainer(orientation='vertical', padding=0, spacing=0)
-        tile_container.bind(on_press=self._on_tile_pressed)
-        
-        # Background with rounded corners
-        with tile_container.canvas.before:
-            Color(0.65, 0.25, 0.25, 1)  # Red color
-            self.bg = RoundedRectangle(pos=tile_container.pos, size=tile_container.size, radius=[10])
-        tile_container.bind(pos=self._update_bg, size=self._update_bg)
-        
-        # Album art area (takes most of the space)
-        album_art_container = BoxLayout(size_hint=(1, 0.5))
-        
-        # Try to load cover art
-        self.album_image = Image(
-            allow_stretch=True,
-            keep_ratio=True
-        )
-        
-        # Load cover if available
+        tile_content = BoxLayout(orientation='vertical', spacing=0, padding=0)
+
+        # Clickable cover image button
+        cover_path = ""
         if playlist and hasattr(playlist, 'cover') and playlist.cover:
-            try:
-                if isinstance(playlist.cover, bytes):
-                    image = PILImage.open(io.BytesIO(playlist.cover))
-                    temp_path = f'temp_lib_cover_{id(self)}.png'
-                    image.save(temp_path)
-                    self.album_image.source = temp_path
-                elif isinstance(playlist.cover, str):
-                    self.album_image.source = playlist.cover
-            except Exception as e:
-                print(f"Could not load library tile cover: {e}")
+            cover_path = playlist.cover
         
-        album_art_container.add_widget(self.album_image)
-        tile_container.add_widget(album_art_container)
-        
-        # Info section with title and description
-        info_section = BoxLayout(orientation='vertical', size_hint=(1, 0.35), padding=[8, 5, 8, 5])
-        
-        # Title label
-        self.title_label = Label(
-            text=title,
-            font_size='13sp',
-            bold=True,
-            size_hint=(1, None),
-            height=20,
-            halign='left',
-            valign='top',
-            color=(1, 1, 1, 1),
-            text_size=(104, None),  # Fixed width for text wrapping
-            shorten=True,
-            shorten_from='right'
+        expand = Button(
+            background_normal=cover_path if cover_path else '',
+            background_down=cover_path if cover_path else '',
+            size_hint=(1, 1)
         )
+        expand.bind(on_press=self._on_tile_pressed)
+        tile_content.add_widget(expand)
         
-        # Description label (smaller, grayed out)
-        self.desc_label = Label(
-            text=description,
-            font_size='10sp',
-            size_hint=(1, None),
-            height=30,
-            halign='left',
-            valign='top',
-            color=(0.8, 0.8, 0.8, 1),
-            text_size=(104, None),
-            markup=True
-        )
-        
-        info_section.add_widget(self.title_label)
-        info_section.add_widget(self.desc_label)
-        tile_container.add_widget(info_section)
-        
-        # Bottom section with play button
+        # Bottom section with RED background and play button
         bottom_section = BoxLayout(orientation='horizontal', size_hint=(1, 0.15), padding=[5, 0, 5, 5])
+        with bottom_section.canvas.before:
+            Color(0.65, 0.25, 0.25, 1)  # RED background
+            self.bottom_section_rect = RoundedRectangle(pos=bottom_section.pos, size=bottom_section.size, radius=[10])
+        bottom_section.bind(pos=self._update_bottom_section_rect, size=self._update_bottom_section_rect)
         
-        # Spacer
-        bottom_section.add_widget(BoxLayout(size_hint=(0.7, 1)))
+        # Info label
+        info_section = Label(
+            text=f'{title}\n{description}' if description else title,
+            font_size='11sp',
+            color=(1, 1, 1, 1),
+            halign='left',
+            valign='middle',
+            text_size=(70, None)
+        )
+        info_section.bind(size=info_section.setter('text_size'))
+        bottom_section.add_widget(info_section)
         
         # Play button in bottom right
         self.play_btn = PlayPauseButton(size_hint=(None, None), size=(25, 25))
@@ -124,9 +86,8 @@ class LibraryTile(BoxLayout):
         
         bottom_section.add_widget(play_btn_container)
         
-        tile_container.add_widget(bottom_section)
-        self.add_widget(tile_container)
-        self.tile_container = tile_container
+        tile_content.add_widget(bottom_section)
+        self.add_widget(tile_content)
     
     def update_display(self):
         """Update the tile display with current playlist info"""
@@ -152,30 +113,56 @@ class LibraryTile(BoxLayout):
     
     def _on_tile_pressed(self, instance):
         """When tile body is clicked, open the playlist viewer"""
-        if self.playlist:
-            # Get the playlist viewer from the app root
-            app = App.get_running_app()
-            playlist_viewer = app.root.playlist_viewer
-            
-            # Load the playlist and show the viewer
-            playlist_viewer.load_playlist(self.playlist)
-            playlist_viewer.show()
+        print(f"Tile pressed! Playlist: {self.playlist}")
+
+        if not self.playlist:
+            print("ERROR: No playlist assigned to this tile!")
+            return
+
+        print(f"Opening viewer for playlist: {self.playlist.title}")
+        
+        # Get the playlist viewer from the app root
+        app = App.get_running_app()
+        print(f"App: {app}")
+        print(f"App root: {app.root}")
+        print(f"App root type: {type(app.root)}")
+        print(f"App root attributes: {dir(app.root)}")
+        
+        # Check if playlist_viewer exists
+        if not hasattr(app.root, 'playlist_viewer'):
+            print("ERROR: app.root doesn't have playlist_viewer!")
+            print("Make sure you're using the updated main.py file")
+            return
+        
+        playlist_viewer = app.root.playlist_viewer
+        print(f"Playlist viewer found: {playlist_viewer}")
+        
+        # Load the playlist and show the viewer
+        playlist_viewer.load_playlist(self.playlist)
+        playlist_viewer.show()
     
     def _on_play_pressed(self, instance):
         """When play button is pressed, play the playlist directly"""
+        print(f"Play button pressed on tile!")
+        
         if self.playlist:
+            print(f"Loading playlist: {self.playlist.title}")
             # Get the audio controller from the app root
             app = App.get_running_app()
             audio_controller = app.root.audio_controller
             
             # Load the playlist and play
             if hasattr(self.playlist, 'songs') and len(self.playlist.songs) > 0:
+                print(f"Playing {len(self.playlist.songs)} songs")
                 audio_controller.load_playlist(self.playlist)
                 audio_controller.play()
                 audio_controller.show_mini()
+            else:
+                print("Playlist has no songs")
         
-        return True  # Stop propagation to prevent tile click
+        # Return True to stop propagation to tile click
+        return True
     
-    def _update_bg(self, instance, value):
-        self.bg.pos = instance.pos
-        self.bg.size = instance.size
+    def _update_bottom_section_rect(self, instance, value):
+        self.bottom_section_rect.pos = instance.pos
+        self.bottom_section_rect.size = instance.size
