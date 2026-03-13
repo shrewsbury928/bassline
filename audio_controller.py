@@ -3,7 +3,7 @@ from kivy.uix.floatlayout import FloatLayout
 from kivy.uix.label import Label
 from kivy.uix.button import Button
 from kivy.uix.slider import Slider
-from kivy.uix.image import Image
+from kivy.uix.image import Image, CoreImage
 from kivy.graphics import Color, Rectangle, Line, RoundedRectangle
 from kivy.core.window import Window
 from kivy.clock import Clock
@@ -21,17 +21,17 @@ class AudioController(FloatLayout):
         self.size_hint = (None, None)
         self.size = (0, 0)  # Start hidden
         
+        # Queue system
+        self.queue = []  # List of songs to play
+        self.current_index = 0  # Current position in queue
+        
         # Current playlist and song tracking
-        self.current_playlist = None
+        self.current_playlist = None  # Reference to source playlist (for metadata)
         self.current_song = None
-        self.current_index = 0
-        self.queue = []
-
-        if self.current_playlist:
-            self.queue = self.current_playlist.songs.copy()
-        elif self.current_song:
-            self.queue = [self.current_song]
-
+        
+        # Track song start time for accurate seeking
+        self.song_start_time = 0  # When the current song started playing
+        self.seek_offset = 0  # Offset from manual seeking
         
         # Initialize pygame mixer with music
         try:
@@ -49,11 +49,38 @@ class AudioController(FloatLayout):
     def _build_mini_player(self):
         """Build the mini player UI - horizontal bar at bottom"""
         # Container for mini player with proper positioning
-        self.mini_container = FloatLayout(size_hint=(1, 1))
+        # Custom container that only captures touches within mini player bounds
+        class MiniPlayerContainer(FloatLayout):
+            def __init__(self, audio_controller, **kwargs):
+                super().__init__(**kwargs)
+                self.audio_controller = audio_controller
+            
+            def on_touch_down(self, touch):
+                # Only handle touches if they hit the mini player widget itself
+                if not self.audio_controller.mini_player.disabled:
+                    if self.audio_controller.mini_player.collide_point(*touch.pos):
+                        return super().on_touch_down(touch)
+                # Let touches pass through to widgets below
+                return False
+            
+            def on_touch_move(self, touch):
+                if not self.audio_controller.mini_player.disabled:
+                    if self.audio_controller.mini_player.collide_point(*touch.pos):
+                        return super().on_touch_move(touch)
+                return False
+            
+            def on_touch_up(self, touch):
+                if not self.audio_controller.mini_player.disabled:
+                    if self.audio_controller.mini_player.collide_point(*touch.pos):
+                        return super().on_touch_up(touch)
+                return False
+        
+        self.mini_container = MiniPlayerContainer(self, size_hint=(1, 1))
         
         self.mini_player = BoxLayout(orientation='horizontal', size_hint=(0.9, None), height=70, padding=[15, 10], spacing=10)
         self.mini_player.pos_hint = {'center_x': 0.5, 'y': 0.12}
         self.mini_player.opacity = 0
+        self.mini_player.disabled = True  # Disable touch events when hidden
         
         with self.mini_player.canvas.before:
             Color(0.5, 0.55, 0.65, 1)
@@ -83,7 +110,7 @@ class AudioController(FloatLayout):
             background_color=(0, 0, 0, 0),
             color=(1, 1, 1, 1)
         )
-        mini_skip_back.bind(on_press=lambda x: self.previous_song())
+        mini_skip_back.bind(on_press=lambda x: (print("Mini skip back pressed"), self.previous_song()))
         
         mini_skip_forward = Button(
             text='>|',
@@ -93,7 +120,7 @@ class AudioController(FloatLayout):
             background_color=(0, 0, 0, 0),
             color=(1, 1, 1, 1)
         )
-        mini_skip_forward.bind(on_press=lambda x: self.next_song())
+        mini_skip_forward.bind(on_press=lambda x: (print("Mini skip forward pressed"), self.next_song()))
         
         self.mini_player.add_widget(self.mini_play_btn)
         
@@ -120,6 +147,7 @@ class AudioController(FloatLayout):
         self.full_player = BoxLayout(orientation='vertical')
         self.full_player.size_hint = (1, 1)
         self.full_player.opacity = 0
+        self.full_player.disabled = True  # Disable touch events when hidden
         
         # Set background color to match design (light blue)
         with self.full_player.canvas.before:
@@ -237,24 +265,79 @@ class AudioController(FloatLayout):
         self.add_widget(self.full_player)
     
     def load_playlist(self, playlist):
-        """Load a playlist into the audio controller"""
+        """Load a playlist into the audio controller - adds all songs to queue"""
+        print(f"Loading playlist: {playlist.title if playlist else 'None'}")
         self.current_playlist = playlist
-        self.current_index = 0
-        if playlist and len(playlist.songs) > 0:
-            self.current_song = playlist.songs[0]
+        
+        if playlist and hasattr(playlist, 'songs') and len(playlist.songs) > 0:
+            # Clear current queue and load playlist songs
+            self.queue = playlist.songs.copy()  # Copy so we don't modify original
+            self.current_index = 0
+            self.current_song = self.queue[0]
+            print(f"Loaded {len(self.queue)} songs to queue, starting with: {self.current_song}")
             self.update_ui()
+        else:
+            print("Playlist is empty or has no songs")
+            self.queue = []
     
     def load_song(self, song, playlist=None):
-        """Load a single song into the audio controller"""
-        self.current_song = song
-        self.current_playlist = playlist
-        if playlist:
+        """Load a single song - if part of playlist, loads entire playlist to queue"""
+        print(f"Loading single song: {song}")
+        
+        if playlist and hasattr(playlist, 'songs'):
+            # Load entire playlist to queue
+            self.current_playlist = playlist
+            self.queue = playlist.songs.copy()
             try:
-                self.current_index = playlist.songs.index(song)
-            except (ValueError, AttributeError):
+                self.current_index = self.queue.index(song)
+                self.current_song = song
+                print(f"Loaded playlist '{playlist.title}' to queue ({len(self.queue)} songs), starting at index {self.current_index}")
+            except ValueError:
+                # Song not in playlist, start at beginning
                 self.current_index = 0
+                self.current_song = self.queue[0] if self.queue else None
+        else:
+            # Single song - create queue with just this song
+            self.queue = [song]
+            self.current_index = 0
+            self.current_song = song
+            self.current_playlist = None
+            print(f"Created queue with single song")
+        
         self.update_ui()
         self.play()
+    
+    def add_to_queue(self, song):
+        """Add a song to the end of the queue"""
+        self.queue.append(song)
+        print(f"Added song to queue. Queue now has {len(self.queue)} songs")
+        
+        # If nothing is playing, start playing this song
+        if not self.current_song:
+            self.current_index = 0
+            self.current_song = self.queue[0]
+            self.update_ui()
+            self.play()
+    
+    def play_next(self, song):
+        """Add a song to play next in the queue (after current song)"""
+        insert_index = self.current_index + 1
+        self.queue.insert(insert_index, song)
+        print(f"Added song to play next at index {insert_index}. Queue now has {len(self.queue)} songs")
+    
+    def get_queue(self):
+        """Get the current queue of songs"""
+        return self.queue
+    
+    def clear_queue(self):
+        """Clear the queue, keeping only the current song"""
+        if self.current_song:
+            self.queue = [self.current_song]
+            self.current_index = 0
+            print("Queue cleared, only current song remaining")
+        else:
+            self.queue = []
+            print("Queue cleared completely")
     
     def update_ui(self):
         """Update UI elements with current song info from tags"""
@@ -277,10 +360,9 @@ class AudioController(FloatLayout):
                     try:
                         if isinstance(self.current_song.cover, bytes):
                             # Save temporarily
-                            temp_path = 'temp_cover.png'
-                            image = PILImage.open(io.BytesIO(self.current_song.cover))
-                            image.save(temp_path)
-                            self.album_image.source = temp_path
+                            data = io.BytesIO(self.current_song.cover)
+                            core_image = CoreImage(data, ext='png')
+                            self.album_image.texture = core_image.texture
                         elif isinstance(self.current_song.cover, str):
                             self.album_image.source = self.current_song.cover
                     except Exception as e:
@@ -314,6 +396,11 @@ class AudioController(FloatLayout):
                 mixer.music.play()
                 self.current_song.paused = False
                 
+                # Reset seek tracking
+                import time
+                self.song_start_time = time.time()
+                self.seek_offset = 0
+                
                 self.mini_play_btn.set_playing(True, animate=False)
                 self.full_play_btn.set_playing(True, animate=False)
                 
@@ -332,6 +419,11 @@ class AudioController(FloatLayout):
             self.mini_play_btn.set_playing(False)
             self.full_play_btn.set_playing(False)
             
+            # Update seek offset to preserve current position
+            import time
+            elapsed = (time.time() - self.song_start_time) + self.seek_offset
+            self.seek_offset = elapsed
+            
             if self.update_event:
                 self.update_event.cancel()
     
@@ -344,6 +436,10 @@ class AudioController(FloatLayout):
                 self.mini_play_btn.set_playing(True)
                 self.full_play_btn.set_playing(True)
                 
+                # Reset start time when resuming
+                import time
+                self.song_start_time = time.time()
+                
                 if self.update_event:
                     self.update_event.cancel()
                 self.update_event = Clock.schedule_interval(self._update_progress, 0.1)
@@ -351,32 +447,47 @@ class AudioController(FloatLayout):
                 self.pause()
     
     def next_song(self):
-        """Skip to next song in playlist"""
-        if self.queue and len(self.queue) > 0:
+        """Skip to next song in queue"""
+        print(f"next_song called. Queue length: {len(self.queue)}")
+        
+        if len(self.queue) > 0:
             self.current_index = (self.current_index + 1) % len(self.queue)
             self.current_song = self.queue[self.current_index]
+            print(f"Skipping to song {self.current_index + 1}/{len(self.queue)}: {self.current_song}")
             mixer.music.stop()
             self.update_ui()
             self.play()
+        else:
+            print("Queue is empty")
     
     def previous_song(self):
-        """Go to previous song in playlist"""
-        if self.queue and len(self.queue) > 0:
+        """Go to previous song in queue"""
+        print(f"previous_song called. Queue length: {len(self.queue)}")
+        
+        if len(self.queue) > 0:
             self.current_index = (self.current_index - 1) % len(self.queue)
             self.current_song = self.queue[self.current_index]
+            print(f"Going back to song {self.current_index + 1}/{len(self.queue)}: {self.current_song}")
             mixer.music.stop()
             self.update_ui()
             self.play()
+        else:
+            print("Queue is empty")
     
     def _update_progress(self, dt):
         """Update progress slider based on song position"""
         if mixer.music.get_busy():
-            current_pos = mixer.music.get_pos() / 1000.0
-            self.progress_slider.value = min(current_pos, self.progress_slider.max)
+            # Calculate elapsed time more accurately
+            import time
+            elapsed = (time.time() - self.song_start_time) + self.seek_offset
+            self.progress_slider.value = min(elapsed, self.progress_slider.max)
         else:
-            if self.current_playlist and len(self.current_playlist.songs) > 1:
+            # Song finished
+            if len(self.queue) > 1:
+                # Auto-advance to next song in queue
                 self.next_song()
             else:
+                # Queue finished
                 if self.update_event:
                     self.update_event.cancel()
                 self.mini_play_btn.set_playing(False, animate=False)
@@ -385,16 +496,64 @@ class AudioController(FloatLayout):
     def _on_slider_seek(self, instance, touch):
         """Handle seeking when slider is moved"""
         if self.progress_slider.collide_point(*touch.pos):
-            seek_pos = self.progress_slider.value
-            try:
-                mixer.music.set_pos(seek_pos)
-            except Exception as e:
-                print(f"Seeking not supported: {e}")
+            # Only seek when user releases the slider (on_touch_up)
+            if touch.grab_current == self.progress_slider:
+                seek_pos = self.progress_slider.value
+                print(f"Seeking to {seek_pos} seconds")
+                
+                if self.current_song and hasattr(self.current_song, 'path'):
+                    try:
+                        was_playing = mixer.music.get_busy()
+                        
+                        # Stop current playback
+                        mixer.music.stop()
+                        
+                        # Reload the song
+                        mixer.music.load(self.current_song.path)
+                        
+                        # For MP3 files, we need to simulate seeking by:
+                        # 1. Playing from start
+                        # 2. Immediately seeking using set_pos (works for some formats)
+                        # 3. Tracking offset for progress display
+                        
+                        if was_playing or not self.current_song.paused:
+                            try:
+                                # Try native seeking first (works for OGG, limited for MP3)
+                                mixer.music.play(start=seek_pos)
+                                
+                                # Update our time tracking
+                                import time
+                                self.song_start_time = time.time()
+                                self.seek_offset = seek_pos
+                                
+                                self.current_song.paused = False
+                                print(f"Successfully seeked to {seek_pos}s")
+                            except Exception as e:
+                                # Fallback: play from beginning if seeking fails
+                                print(f"Seeking not fully supported for this format: {e}")
+                                mixer.music.play()
+                                import time
+                                self.song_start_time = time.time()
+                                self.seek_offset = 0
+                        else:
+                            # Song was paused, load at position but don't play
+                            mixer.music.play(start=seek_pos)
+                            mixer.music.pause()
+                            import time
+                            self.song_start_time = time.time()
+                            self.seek_offset = seek_pos
+                            
+                    except Exception as e:
+                        print(f"Error seeking: {e}")
     
     def show_mini(self):
         """Show the mini player with smooth animation"""
         self.is_expanded = False
         self.size = Window.size
+        
+        # Enable/disable touch events
+        self.mini_player.disabled = False
+        self.full_player.disabled = True
         
         # Animate the transition
         anim_full = Animation(opacity=0, duration=0.3, t='out_quad')
@@ -408,6 +567,10 @@ class AudioController(FloatLayout):
         """Expand to full player with smooth animation"""
         self.is_expanded = True
         self.size = Window.size
+        
+        # Enable/disable touch events
+        self.mini_player.disabled = True
+        self.full_player.disabled = False
         
         # Animate the transition
         anim_mini = Animation(opacity=0, duration=0.3, t='out_quad')
@@ -423,6 +586,24 @@ class AudioController(FloatLayout):
         self.mini_container.opacity = 0
         self.mini_player.opacity = 0
         self.full_player.opacity = 0
+        
+        # Disable touch events for both
+        self.mini_player.disabled = True
+        self.full_player.disabled = True
+    
+    def on_touch_down(self, touch):
+        """Override to allow touches to pass through when full player is hidden"""
+        # If full player is disabled (hidden), don't consume the touch
+        if self.full_player.disabled:
+            # Only handle touch if it's for the mini player
+            if self.mini_player.collide_point(*touch.pos) and not self.mini_player.disabled:
+                return super().on_touch_down(touch)
+            else:
+                # Let touch pass through to widgets below
+                return False
+        else:
+            # Full player is active, handle normally
+            return super().on_touch_down(touch)
     
     def _update_mini_bg(self, instance, value):
         self.mini_bg.pos = instance.pos

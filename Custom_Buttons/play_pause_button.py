@@ -80,9 +80,6 @@ class PlayPauseButton(ButtonBehavior, Widget):
     def set_playing(self, playing: bool, animate=True):
         """Set the playing state and optionally animate the transition"""
         old_state = self.is_playing
-    def set_playing(self, playing: bool, animate=True):
-        """Set the playing state and optionally animate the transition"""
-        old_state = self.is_playing
         self.is_playing = bool(playing)
         
         if animate and old_state != self.is_playing:
