@@ -1,18 +1,15 @@
-
-from kivy.app import App
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.label import Label
 from kivy.uix.textinput import TextInput
-from kivy.uix.popup import Popup
-from kivy.uix.screenmanager import ScreenManager, Screen
-from kivy.uix.slider import Slider
-from kivy.uix.scrollview import ScrollView
-from kivy.graphics import Color, Rectangle, Line, RoundedRectangle
-from kivy.core.window import Window
-from Custom_Buttons.play_pause_button import PlayPauseButton
 from kivy.uix.button import Button
+from kivy.uix.popup import Popup
+from kivy.uix.screenmanager import Screen
+from kivy.graphics import Color, Rectangle
+from kivy.core.window import Window
+
 # Import your backend functions
 from backend import login
+
 
 class LoginScreen(Screen):
     def __init__(self, **kwargs):
@@ -61,7 +58,7 @@ class LoginScreen(Screen):
         layout.add_widget(Label(text='Password:', size_hint=(1, 0.1), halign='left'))
         self.password_input = TextInput(
             multiline=False,
-            password=False,
+            password=True,
             size_hint=(1, 0.15),
             background_color=(0.85, 0.85, 0.85, 1),
             foreground_color=(0, 0, 0, 1),
@@ -92,8 +89,8 @@ class LoginScreen(Screen):
         guest_btn = Button(
             text='Sign in as Guest',
             background_color=(0.3, 0.5, 0.8, 1),
-            size_hint=(1, 0.15),
-            background_normal=''
+            background_normal='',
+            size_hint=(1, 0.1)
         )
         guest_btn.bind(on_press=self.guest_pressed)
 
@@ -116,6 +113,7 @@ class LoginScreen(Screen):
         if result is True:
             # Store username and clear fields
             self.manager.get_screen('home').set_username(username)
+            self.manager.get_screen('library').set_username(username)
             self.username_input.text = ''
             self.email_input.text = ''
             self.password_input.text = ''
@@ -136,27 +134,33 @@ class LoginScreen(Screen):
         result = login.register(username, email, password)
         
         if result is True:
-            # Store username and clear fields
+            # Successful registration
             self.manager.get_screen('home').set_username(username)
+            self.manager.get_screen('library').set_username(username)
             self.username_input.text = ''
             self.email_input.text = ''
             self.password_input.text = ''
             # Switch to home screen
             self.manager.current = 'home'
-        elif result is False:
-            self.show_popup('Registration Failed', 'Username or email already exists')
+        elif isinstance(result, str):
+            # Single error message (from email/username validation)
+            self.show_popup('Registration Failed', result)
         elif isinstance(result, list):
+            # Multiple error messages (from password validation)
             error_msg = '\n'.join(result)
             self.show_popup('Registration Failed', error_msg)
+        else:
+            # Fallback
+            self.show_popup('Registration Failed', 'An error occurred during registration')
 
     def guest_pressed(self, instance):
-        self.manager.get_screen('home').set_username('guest')
+        self.manager.get_screen('home').set_username('Guest')
+        self.manager.get_screen('library').set_username('Guest')
         self.username_input.text = ''
         self.email_input.text = ''
         self.password_input.text = ''
         # Switch to home screen
         self.manager.current = 'home'
-    
     
     def show_popup(self, title, message):
         popup = Popup(

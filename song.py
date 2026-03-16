@@ -1,5 +1,5 @@
 from tinytag import TinyTag
-
+import pygame.mixer as mixer
 class Song():
     def __init__(self, mp3_path, genre: str = 'n/a'):
         self.path = mp3_path
@@ -46,11 +46,11 @@ class Song():
             
             # If no cover found, use default
             if not self.cover:
-                self.cover = "library/cover_if_none.png"
+                self.cover = "images\Placeholder_Song.png"
                 
         except Exception as e:
             print(f"Error loading song cover: {e}")
-            self.cover = "library/cover_if_none.png"
+            self.cover = "images\Placeholder_Song.png"
     
     def __str__(self):
         """String representation"""

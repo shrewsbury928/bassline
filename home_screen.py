@@ -8,7 +8,6 @@ from kivy.core.window import Window
 import random as r
 from song_card import SongCard
 from recommendation_engine import RecommendationEngine
-from songs_manager import library
 
 
 class HomeScreen(Screen):
@@ -24,21 +23,6 @@ class HomeScreen(Screen):
             Color(0.2, 0.2, 0.2, 1)
             self.rect = Rectangle(size=Window.size, pos=(0, 0))
         
-        # Top header
-        header = BoxLayout(size_hint=(1, 0.06), padding=[15, 10])
-        with header.canvas.before:
-            Color(0.15, 0.15, 0.15, 1)
-            self.header_rect = Rectangle(size=header.size, pos=header.pos)
-        header.bind(size=self._update_header, pos=self._update_header)
-        
-        header.add_widget(Label(
-            text='Homepage',
-            color=(0.6, 0.6, 0.6, 1),
-            halign='left',
-            valign='middle'
-        ))
-        main_layout.add_widget(header)
-        
         # Welcome section
         welcome_box = BoxLayout(orientation='horizontal', size_hint=(1, 0.12), padding=[20, 15], spacing=15)
         
@@ -50,7 +34,7 @@ class HomeScreen(Screen):
         profile_circle.bind(pos=self._update_circle, size=self._update_circle)
         
         self.welcome_label = Label(
-            text=f'Welcome,\n{self.username}',
+            text=f"Welcome, {self.username}",
             font_size='20sp',
             halign='left',
             valign='middle',
@@ -67,7 +51,7 @@ class HomeScreen(Screen):
         self.content_layout = BoxLayout(
             orientation='vertical',
             spacing=15,
-            padding=[20, 10, 20, 100],  # Extra bottom padding for mini player
+            padding=[38, 10, 18, 100], 
             size_hint_y=None
         )
         self.content_layout.bind(minimum_height=self.content_layout.setter('height'))
@@ -120,7 +104,7 @@ class HomeScreen(Screen):
     
     def set_username(self, username):
         self.username = username
-        self.welcome_label.text = f'Welcome,\n[{username}]'
+        self.welcome_label.text = f'Welcome, {username}'
     
     def _update_header(self, instance, value):
         self.header_rect.pos = instance.pos

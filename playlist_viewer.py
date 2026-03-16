@@ -5,7 +5,7 @@ from kivy.uix.button import Button
 from kivy.uix.scrollview import ScrollView
 from kivy.uix.textinput import TextInput
 from kivy.uix.popup import Popup
-from kivy.uix.image import Image
+from kivy.uix.image import CoreImage, Image
 from kivy.graphics import Color, Rectangle, RoundedRectangle, Line
 from kivy.core.window import Window
 from kivy.animation import Animation
@@ -194,11 +194,20 @@ class PlaylistViewer(FloatLayout):
             color=(1, 1, 1, 1)
         )
         self.title_label.bind(size=self.title_label.setter('text_size'))
+
+        self.description_label = Label(
+            text='',
+            font_size='12sp',
+            halign='left',
+            valign='top',
+            color=(0.8, 0.8, 0.8, 1)
+        )
         
         self.main_play_btn = PlayPauseButton(size_hint=(None, None), size=(50, 50))
         self.main_play_btn.bind(on_press=self._play_playlist)
         
         title_section.add_widget(self.title_label)
+        title_section.add_widget(self.description_label)
         title_section.add_widget(self.main_play_btn)
         content.add_widget(title_section)
         
@@ -258,16 +267,16 @@ class PlaylistViewer(FloatLayout):
         self.current_playlist = playlist
         
         # Update UI with playlist info
-        self.title_label.text = playlist.title if playlist else 'Playlist'
+        self.title_label.text = playlist.title
+        self.description_label.text = playlist.description if playlist.description else ''
         
         # Load cover art if available
         if playlist and hasattr(playlist, 'cover') and playlist.cover:
             try:
                 if isinstance(playlist.cover, bytes):
-                    image = PILImage.open(io.BytesIO(playlist.cover))
-                    temp_path = 'temp_playlist_cover.png'
-                    image.save(temp_path)
-                    self.album_image.source = temp_path
+                    data = io.BytesIO(self.playlist.cover)
+                    core_image = CoreImage(data, ext='png')
+                    self.album_image.texture = core_image.texture
                 elif isinstance(playlist.cover, str):
                     self.album_image.source = playlist.cover
             except Exception as e:

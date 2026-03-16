@@ -2,7 +2,7 @@ from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.behaviors import ButtonBehavior
 from kivy.uix.button import Button
 from kivy.uix.label import Label
-from kivy.uix.image import Image
+from kivy.uix.image import CoreImage, Image
 from kivy.graphics import Color, Rectangle, RoundedRectangle
 from Custom_Buttons.play_pause_button import PlayPauseButton
 from kivy.app import App
@@ -29,19 +29,23 @@ class LibraryTile(BoxLayout):
         
         # Store playlist reference
         self.playlist = playlist
-        print(f"self.playlist after assignment: {self.playlist}")
-        print(f"=== LibraryTile.__init__ END ===\n")
         
         # Get title and description from playlist if available
-        title = "Untitled"
         description = ""
         if playlist:
-            title = playlist.title if playlist.title else "Untitled"
+            title = playlist.title
             description = playlist.description if hasattr(playlist, 'description') and playlist.description else ""
         
         tile_content = BoxLayout(orientation='vertical', spacing=0, padding=0)
 
-        # Clickable cover image button
+        # Album art section - perfect square (120x120 pixels)
+        album_art_section = BoxLayout(size_hint=(1, None), height=120)
+        with album_art_section.canvas.before:
+            Color(0.65, 0.25, 0.25, 1)  # RED background
+            self.album_art_rect = Rectangle(pos=album_art_section.pos, size=album_art_section.size)
+        album_art_section.bind(pos=self._update_album_art_rect, size=self._update_album_art_rect)
+
+        # Clickable cover image button inside the square
         cover_path = ""
         if playlist and hasattr(playlist, 'cover') and playlist.cover:
             cover_path = playlist.cover
@@ -52,18 +56,19 @@ class LibraryTile(BoxLayout):
             size_hint=(1, 1)
         )
         expand.bind(on_press=self._on_tile_pressed)
-        tile_content.add_widget(expand)
+        album_art_section.add_widget(expand)
+        tile_content.add_widget(album_art_section)
         
-        # Bottom section with RED background and play button
-        bottom_section = BoxLayout(orientation='horizontal', size_hint=(1, 0.15), padding=[5, 0, 5, 5])
+        # Bottom info section with title and description
+        bottom_section = BoxLayout(orientation='horizontal', size_hint=(1, None), height=30, padding=[5, 5])
         with bottom_section.canvas.before:
-            Color(0.65, 0.25, 0.25, 1)  # RED background
-            self.bottom_section_rect = RoundedRectangle(pos=bottom_section.pos, size=bottom_section.size, radius=[10])
+            Color(0.2, 0.2, 0.2, 1)  # Dark background for info section
+            self.bottom_section_rect = Rectangle(pos=bottom_section.pos, size=bottom_section.size)
         bottom_section.bind(pos=self._update_bottom_section_rect, size=self._update_bottom_section_rect)
         
         # Info label
         info_section = Label(
-            text=f'{title}\n{description}' if description else title,
+            text=f'{title}',
             font_size='11sp',
             color=(1, 1, 1, 1),
             halign='left',
@@ -102,10 +107,9 @@ class LibraryTile(BoxLayout):
             if hasattr(self.playlist, 'cover') and self.playlist.cover:
                 try:
                     if isinstance(self.playlist.cover, bytes):
-                        image = PILImage.open(io.BytesIO(self.playlist.cover))
-                        temp_path = f'temp_lib_cover_{id(self)}.png'
-                        image.save(temp_path)
-                        self.album_image.source = temp_path
+                        data = io.BytesIO(self.playlist.cover)
+                        core_image = CoreImage(data, ext='png')
+                        self.album_image.texture = core_image.texture
                     elif isinstance(self.playlist.cover, str):
                         self.album_image.source = self.playlist.cover
                 except Exception as e:
@@ -113,7 +117,7 @@ class LibraryTile(BoxLayout):
     
     def _on_tile_pressed(self, instance):
         """When tile body is clicked, open the playlist viewer"""
-        print(f"Tile pressed! Playlist: {self.playlist}")
+        print(f"Tile pressed! Playlist: {self.playlist if self.playlist else 'None'}")
 
         if not self.playlist:
             print("ERROR: No playlist assigned to this tile!")
@@ -166,3 +170,7 @@ class LibraryTile(BoxLayout):
     def _update_bottom_section_rect(self, instance, value):
         self.bottom_section_rect.pos = instance.pos
         self.bottom_section_rect.size = instance.size
+    
+    def _update_album_art_rect(self, instance, value):
+        self.album_art_rect.pos = instance.pos
+        self.album_art_rect.size = instance.size

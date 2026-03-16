@@ -3,15 +3,15 @@ from kivy.uix.floatlayout import FloatLayout
 from kivy.uix.label import Label
 from kivy.uix.button import Button
 from kivy.uix.slider import Slider
-from kivy.uix.image import Image, CoreImage
+from kivy.uix.image import Image
 from kivy.graphics import Color, Rectangle, Line, RoundedRectangle
 from kivy.core.window import Window
 from kivy.clock import Clock
 from kivy.animation import Animation
+from kivy.core.image import Image as CoreImage
 from Custom_Buttons.play_pause_button import PlayPauseButton
 import pygame.mixer as mixer
 import io
-from PIL import Image as PILImage
 
 class AudioController(FloatLayout):
     """Floating audio controller that can be minimized or expanded"""
@@ -49,39 +49,12 @@ class AudioController(FloatLayout):
     def _build_mini_player(self):
         """Build the mini player UI - horizontal bar at bottom"""
         # Container for mini player with proper positioning
-        # Custom container that only captures touches within mini player bounds
-        class MiniPlayerContainer(FloatLayout):
-            def __init__(self, audio_controller, **kwargs):
-                super().__init__(**kwargs)
-                self.audio_controller = audio_controller
-            
-            def on_touch_down(self, touch):
-                # Only handle touches if they hit the mini player widget itself
-                if not self.audio_controller.mini_player.disabled:
-                    if self.audio_controller.mini_player.collide_point(*touch.pos):
-                        return super().on_touch_down(touch)
-                # Let touches pass through to widgets below
-                return False
-            
-            def on_touch_move(self, touch):
-                if not self.audio_controller.mini_player.disabled:
-                    if self.audio_controller.mini_player.collide_point(*touch.pos):
-                        return super().on_touch_move(touch)
-                return False
-            
-            def on_touch_up(self, touch):
-                if not self.audio_controller.mini_player.disabled:
-                    if self.audio_controller.mini_player.collide_point(*touch.pos):
-                        return super().on_touch_up(touch)
-                return False
-        
-        self.mini_container = MiniPlayerContainer(self, size_hint=(1, 1))
+        self.mini_container = FloatLayout(size_hint=(1, 1))
         
         self.mini_player = BoxLayout(orientation='horizontal', size_hint=(0.9, None), height=70, padding=[15, 10], spacing=10)
         self.mini_player.pos_hint = {'center_x': 0.5, 'y': 0.12}
         self.mini_player.opacity = 0
-        self.mini_player.disabled = True  # Disable touch events when hidden
-        
+
         with self.mini_player.canvas.before:
             Color(0.5, 0.55, 0.65, 1)
             self.mini_bg = RoundedRectangle(pos=self.mini_player.pos, size=self.mini_player.size, radius=[15])
@@ -147,7 +120,6 @@ class AudioController(FloatLayout):
         self.full_player = BoxLayout(orientation='vertical')
         self.full_player.size_hint = (1, 1)
         self.full_player.opacity = 0
-        self.full_player.disabled = True  # Disable touch events when hidden
         
         # Set background color to match design (light blue)
         with self.full_player.canvas.before:
@@ -359,7 +331,7 @@ class AudioController(FloatLayout):
                 if hasattr(self.current_song, 'cover') and self.current_song.cover:
                     try:
                         if isinstance(self.current_song.cover, bytes):
-                            # Save temporarily
+                            # Load image directly from bytes using CoreImage
                             data = io.BytesIO(self.current_song.cover)
                             core_image = CoreImage(data, ext='png')
                             self.album_image.texture = core_image.texture
@@ -511,11 +483,6 @@ class AudioController(FloatLayout):
                         # Reload the song
                         mixer.music.load(self.current_song.path)
                         
-                        # For MP3 files, we need to simulate seeking by:
-                        # 1. Playing from start
-                        # 2. Immediately seeking using set_pos (works for some formats)
-                        # 3. Tracking offset for progress display
-                        
                         if was_playing or not self.current_song.paused:
                             try:
                                 # Try native seeking first (works for OGG, limited for MP3)
@@ -551,10 +518,6 @@ class AudioController(FloatLayout):
         self.is_expanded = False
         self.size = Window.size
         
-        # Enable/disable touch events
-        self.mini_player.disabled = False
-        self.full_player.disabled = True
-        
         # Animate the transition
         anim_full = Animation(opacity=0, duration=0.3, t='out_quad')
         anim_mini = Animation(opacity=1, duration=0.3, t='out_quad')
@@ -567,11 +530,7 @@ class AudioController(FloatLayout):
         """Expand to full player with smooth animation"""
         self.is_expanded = True
         self.size = Window.size
-        
-        # Enable/disable touch events
-        self.mini_player.disabled = True
-        self.full_player.disabled = False
-        
+
         # Animate the transition
         anim_mini = Animation(opacity=0, duration=0.3, t='out_quad')
         anim_full = Animation(opacity=1, duration=0.3, t='out_quad')
@@ -586,25 +545,24 @@ class AudioController(FloatLayout):
         self.mini_container.opacity = 0
         self.mini_player.opacity = 0
         self.full_player.opacity = 0
-        
-        # Disable touch events for both
-        self.mini_player.disabled = True
-        self.full_player.disabled = True
     
     def on_touch_down(self, touch):
         """Override to allow touches to pass through when full player is hidden"""
-        # If full player is disabled (hidden), don't consume the touch
-        if self.full_player.disabled:
-            # Only handle touch if it's for the mini player
-            if self.mini_player.collide_point(*touch.pos) and not self.mini_player.disabled:
+        # If full player is visible (expanded), consume all touches
+        if self.is_expanded:
+            return super().on_touch_down(touch)
+        
+        # If mini player is visible, only consume touches on mini player area
+        if self.mini_player.opacity > 0:
+            if self.mini_player.collide_point(*touch.pos):
                 return super().on_touch_down(touch)
             else:
                 # Let touch pass through to widgets below
                 return False
-        else:
-            # Full player is active, handle normally
-            return super().on_touch_down(touch)
-    
+        
+        # Both hidden, let all touches pass through
+        return False
+
     def _update_mini_bg(self, instance, value):
         self.mini_bg.pos = instance.pos
         self.mini_bg.size = instance.size

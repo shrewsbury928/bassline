@@ -5,9 +5,7 @@ from kivy.animation import Animation
 
 
 class PlayPauseButton(ButtonBehavior, Widget):
-    """A play/pause button that crossfades a triangle (play) into two bars (pause).
-
-    Usage: import the class and add it to your UI, or load the accompanying KV snippet.
+    """A play/pause button that crossfades a triangle (play) into two bars (pause)
     """
     def __init__(self, **kwargs):
         super().__init__(**kwargs)

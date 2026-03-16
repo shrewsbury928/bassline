@@ -1,7 +1,7 @@
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.label import Label
 from kivy.graphics import Color, Rectangle, RoundedRectangle
-from kivy.uix.image import Image
+from kivy.uix.image import Image, CoreImage
 from Custom_Buttons.play_pause_button import PlayPauseButton
 from kivy.app import App
 import io
@@ -9,34 +9,33 @@ from PIL import Image as PILImage
 
 
 class SongCard(BoxLayout):
-    def __init__(self, title="Title", artist='n/a', song=None, album_on_right=False, **kwargs):
+    def __init__(self, song=None, album_on_right=False, **kwargs):
         super().__init__(**kwargs)
         self.orientation = 'horizontal'
         self.size_hint = (0.9, None)
         self.height = 120
         self.spacing = 10
         self.padding = [10, 10]
-        self.song = song
-
-        # Extract song information if available
-        if self.song and hasattr(self.song, 'path'):
-            try:
-                from tinytag import TinyTag
-                tags = TinyTag.get(self.song.path)
-                title = tags.title or "Unknown Title"
-                artist = tags.artist or "Unknown Artist"
-            except Exception as e:
-                print(f"Error loading song tags: {e}")
-                # Keep default values if loading fails
         
+        # Store song reference
+        self.song = song
+        
+        # Get title and artist from song if available
+        if self.song and hasattr(self.song, 'path'):
+            title = self.song.title
+            artist = self.song.artist
+        else:
+            title = 'Unknown Title'
+            artist = 'Unknown Artist'
+
         # Background with rounded corners
         with self.canvas.before:
             Color(0.5, 0.5, 0.5, 1)
             self.bg = RoundedRectangle(pos=self.pos, size=self.size, radius=[15])
         self.bind(pos=self._update_bg, size=self._update_bg)
         
-        # Album art (with image support)
-        album_art_container = BoxLayout(size_hint=(None, 1), width=80)
+        # Album art (with image support) - perfect square
+        album_art_container = BoxLayout(size_hint=(None, None), size=(100, 100), pos_hint={'center_y': 0.5})
         
         # Try to load album art
         self.album_image = Image(
@@ -54,17 +53,18 @@ class SongCard(BoxLayout):
         if song and hasattr(song, 'cover') and song.cover:
             try:
                 if isinstance(song.cover, bytes):
-                    image = PILImage.open(io.BytesIO(song.cover))
-                    temp_path = f'temp_cover_{id(self)}.png'
-                    image.save(temp_path)
-                    self.album_image.source = temp_path
+                    # Load image directly from bytes using CoreImage
+                    data = io.BytesIO(song.cover)
+                    core_image = CoreImage(data, ext='png')
+                    self.album_image.texture = core_image.texture
                 elif isinstance(song.cover, str):
+                    # Load from file path
                     self.album_image.source = song.cover
             except Exception as e:
                 print(f"Error loading cover: {e}")
                 try:
                     # Try to load default cover
-                    self.album_image.source = 'library/cover_if_none.png'
+                    self.album_image.source = 'images/Placeholder_Song.png'
                 except:
                     pass
         
@@ -114,14 +114,13 @@ class SongCard(BoxLayout):
     
     def _on_play_pressed(self, instance):
         """When play button is pressed, load song into audio controller"""
-        if self.song:
-            # Get the audio controller from the app root
-            app = App.get_running_app()
-            audio_controller = app.root.audio_controller
-            
-            # Load the song and show mini player
-            audio_controller.load_song(self.song)
-            audio_controller.show_mini()
+        # Get the audio controller from the app root
+        app = App.get_running_app()
+        audio_controller = app.root.audio_controller
+        
+        # Load the single song
+        audio_controller.load_song(self.song)
+        audio_controller.show_mini()
     
     def _update_bg(self, instance, value):
         self.bg.pos = self.pos

@@ -70,10 +70,10 @@ class LibraryScreen(Screen):
         # Grid layout for tiles (2 columns)
         self.grid_layout = GridLayout(
             cols=2,
-            spacing=15,
-            padding=[20, 10, 20, 100],  # Extra bottom padding for mini player
+            spacing=20,  # Increased spacing between tiles to prevent collision
+            padding=[45, 40, 15, 100],  # [left, top, right, bottom]
             size_hint_y=None,
-            row_default_height=120,
+            row_default_height=150,  # 150px tile height + 20px spacing
             row_force_default=True
         )
         self.grid_layout.bind(minimum_height=self.grid_layout.setter('height'))
@@ -149,7 +149,6 @@ class LibraryScreen(Screen):
             print(f"Created playlist: {new_playlist.title}, desc: {new_playlist.description}")
             self.user_playlists.append(new_playlist)
             print(f"Total playlists: {len(self.user_playlists)}")
-            print(f"user playlists: {[p.title for p in self.user_playlists]}")
             
             # Refresh the grid
             self.refresh_library()

@@ -13,6 +13,7 @@ import os
 from home_screen import HomeScreen
 from login_screen import LoginScreen
 from library_screen import LibraryScreen
+from search_screen import SearchScreen
 
 # Import audio controller
 from audio_controller import AudioController
@@ -22,17 +23,17 @@ from playlist_viewer import PlaylistViewer
 from song import Song
 from playlist import Playlist
 
-
 class MainContainer(FloatLayout):
     """Main container that holds everything including the floating audio controller"""
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        
+
         # Screen manager for pages
         self.screen_manager = ScreenManager()
         self.screen_manager.add_widget(LoginScreen(name='login'))
         self.screen_manager.add_widget(HomeScreen(name='home'))
         self.screen_manager.add_widget(LibraryScreen(name='library'))
+        self.screen_manager.add_widget(SearchScreen(name='search'))
         
         # Bind to screen changes to show/hide nav bar
         self.screen_manager.bind(current=self._on_screen_change)
