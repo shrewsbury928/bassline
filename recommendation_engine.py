@@ -1,6 +1,6 @@
 import random
 from playlist import Playlist
-from songs_manager import SongLibrary as song_lib
+from song_library_manager import SongLibraryManager as song_lib
 
 
 class RecommendationEngine:
