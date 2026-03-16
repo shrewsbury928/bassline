@@ -18,8 +18,8 @@ class RecommendationEngine:
             return []
         
         # Return up to 'count' random songs
-        num_songs = min(count, len(all_songs))
-        return random.sample(all_songs, num_songs)
+        num_songs = min(count, len(all_songs)) #pick the smaller number
+        return random.sample(all_songs, num_songs) #return random selection from list
     
     def create_playlist_from_songs(self, title="Recommended", description="Auto-generated playlist"):
         #random playlist creation from songs

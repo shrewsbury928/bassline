@@ -27,7 +27,7 @@ class SongLibraryManager:
         #load all songs from folder
         for filename in os.listdir(self.songs_folder):
             #check for valid audio file extensions
-            if filename.lower().endswith(('.mp3', '.wav', '.ogg', '.flac')):
+            if filename.lower().endswith(('.mp3', '.wav', '.ogg')):
                 file_path = os.path.join(self.songs_folder, filename)
                 #attempt to create Song object and add to list
                 try:
